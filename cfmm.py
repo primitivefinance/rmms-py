@@ -45,10 +45,11 @@ class CoveredCallAMM():
         self.K = K
         self.sigma = sigma 
         self.tau = tau
-        function = lambda y : blackScholesCoveredCall([initial_x, y], self.K, self.sigma, self.tau)
-        #Find solution that satisfies the invariant equation Phi(x,y) = 0
-        y = scipy.optimize.root(function, initial_x, method='lm')
-        self.reserves_riskless = y.x[0]
+        # function = lambda y : blackScholesCoveredCall([initial_x, y], self.K, self.sigma, self.tau)
+        # #Find solution that satisfies the invariant equation Phi(x,y) = 0
+        # y = scipy.optimize.root(function, initial_x, method='lm')
+        # self.reserves_riskless = y.x[0]
+        self.reserves_riskless = self.K*norm.cdf(norm.ppf(1-initial_x) - self.sigma*self.tau)
         self.fee = fee
         self.accured_fees = [0,0]
 
@@ -61,10 +62,11 @@ class CoveredCallAMM():
         effective_amount_in = amount_in*(1 - self.fee)
         self.accured_fees[0] += amount_in*self.fee
         new_reserves_risky = self.reserves_risky + effective_amount_in
-        function = lambda y : blackScholesCoveredCall([new_reserves_risky, y], self.K, self.sigma, self.tau)
-        #Find solution that satisfies the invariant equation Phi(x,y) = 0
-        y = scipy.optimize.root(function, old_reserves_riskless, method='lm')
-        new_reserves_riskless = y.x[0]
+        # function = lambda y : blackScholesCoveredCall([new_reserves_risky, y], self.K, self.sigma, self.tau)
+        # #Find solution that satisfies the invariant equation Phi(x,y) = 0
+        # y = scipy.optimize.root(function, old_reserves_riskless, method='lm')
+        # new_reserves_riskless = y.x[0]
+        new_reserves_riskless = self.K*norm.cdf(norm.ppf(1-new_reserves_risky) - self.sigma*np.sqrt(self.tau))
         self.reserves_risky = new_reserves_risky
         self.reserves_riskless = new_reserves_riskless
         #Return amount to give to trader
@@ -78,9 +80,10 @@ class CoveredCallAMM():
         effective_amount_in = amount_in*(1-self.fee)
         self.accured_fees[1] += amount_in*self.fee 
         new_reserves_riskless = self.reserves_riskless + effective_amount_in
-        function = lambda x : blackScholesCoveredCall([x, new_reserves_riskless], self.K, self.sigma, self.tau)
-        x = scipy.optimize.root(function, old_reserves_risky, method='lm')
-        new_reserves_risky = x.x[0]
+        # function = lambda x : blackScholesCoveredCall([x, new_reserves_riskless], self.K, self.sigma, self.tau)
+        # x = scipy.optimize.root(function, old_reserves_risky, method='lm')
+        # new_reserves_risky = x.x[0]
+        new_reserves_risky = 1 - norm.cdf(norm.ppf(new_reserves_riskless/self.K) + self.sigma*np.sqrt(self.tau))
         self.reserves_risky = new_reserves_risky
         self.reserves_riskless = new_reserves_riskless
         return old_reserves_risky - new_reserves_risky
