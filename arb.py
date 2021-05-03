@@ -22,22 +22,19 @@ class Arbitrager():
         '''
         #Check which asset we'll have to swap in to arbitrage
         amm_spot_price = Pool.getSpotPrice()
-        if amm_spot_price > reference_price and Pool.reserves_risky < 0.999:
-            #Swap the risky asset for the riskless asset to move the price down
-            #Find the smallest swap that would satisfy amm_spot < reference_price using virtual swaps
-            spot_price_after_trade = amm_spot_price
-            amount_in = 0.00001
-            while spot_price_after_trade > reference_price and amount_in + Pool.reserves_risky < 0.999:
-                spot_price_after_trade = Pool.getSpotPriceAfterVirtualSwapAmountInRisky(amount_in)
-                amount_in += 0.00001
-            #Actually perform the swap
-            _ = Pool.swapAmountInRisky(amount_in)
-        elif amm_spot_price < reference_price and Pool.reserves_riskless < 999.9:
-            #Swap the riskless asset for the risky asset to move the price up
-            spot_price_after_trade = amm_spot_price
-            amount_in = 0.1
-            while spot_price_after_trade < reference_price and amount_in + Pool.reserves_riskless < 999:
-                spot_price_after_trade = Pool.getSpotPriceAfterVirtualSwapAmountInRiskless(amount_in)
-                amount_in += 0.1
-            #Actually perform the swap
-            _ = Pool.swapAmountInRiskless(amount_in)
+        if amm_spot_price > reference_price:
+            #Find riksy reserves corresponding to that reference price after arbitrage
+            final_risky_reserves = Pool.getRiskyReservesGivenSpotPrice(reference_price)
+            #Calculate risky asset to swap in
+            amount_risky_to_swap = final_risky_reserves - Pool.reserves_risky
+            #Perform swap
+            _ = Pool.swapAmountInRisky(amount_risky_to_swap)
+        elif amm_spot_price < reference_price:
+            #Find riskless reserves corresponding to that reference price after arbitrage
+            final_risky_reserves = Pool.getRiskyReservesGivenSpotPrice(reference_price)
+            final_riskless_reserves = Pool.getRisklessGivenRisky(final_risky_reserves)
+            #Calculate riskless asset to swap in 
+            amount_riskless_to_swap = final_riskless_reserves - Pool.reserves_riskless
+            #Perform swap
+            _ = Pool.swapAmountInRiskless(amount_riskless_to_swap)
+            

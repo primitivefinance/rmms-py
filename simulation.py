@@ -38,12 +38,17 @@ t, S = time_series.generateGBM(T, mu, sigma, S0, dt)
 #Store spot prices after each step
 spot_price_array = []
 
-for i in range(len(S)):
-    if i % 30 == 1: 
-        print("In progress... 1")
-    spot_price_array.append(Pool.getSpotPrice())
-    Arbitrager.arbitrageExactly(S[i], Pool)
 
-plt.plot(t, S)
-plt.plot(t, spot_price_array)
+for i in range(len(S)):
+    if i % 100 == 1: 
+        print("In progress...")
+    Arbitrager.arbitrageExactly(S[i], Pool)
+    spot_price_array.append(Pool.getSpotPrice())
+
+plt.plot(t, S, label = "Reference price")
+plt.plot(t, spot_price_array, label = "Pool spot price")
+plt.title("Arbitrage between CFMM and reference price")
+plt.xlabel("Time steps (days)")
+plt.ylabel("Price (USD)")
+plt.legend(loc='best')
 plt.show()

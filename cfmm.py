@@ -16,11 +16,12 @@ def blackScholesCoveredCall(x, K, sigma, tau):
     return result
 
 # #For analytic spot price formula
-# def quantilePrime(x):
-#     return norm.pdf(norm.ppf(x))**-1
 
-# def blackScholesCoveredCallSpotPrice(x, K, sigma, tau):
-#     return K*norm.pdf(norm.ppf(1 - x) - sigma*np.sqrt(tau))*quantilePrime(1-x)
+def quantilePrime(x):
+    return norm.pdf(norm.ppf(x))**-1
+
+def blackScholesCoveredCallSpotPrice(x, K, sigma, tau):
+    return K*norm.pdf(norm.ppf(1 - x) - sigma*np.sqrt(tau))*quantilePrime(1-x)
 
 class CoveredCallAMM():
     '''
@@ -45,6 +46,7 @@ class CoveredCallAMM():
         self.K = K
         self.sigma = sigma 
         self.tau = tau
+        self.invariant = 0
         # function = lambda y : blackScholesCoveredCall([initial_x, y], self.K, self.sigma, self.tau)
         # #Find solution that satisfies the invariant equation Phi(x,y) = 0
         # y = scipy.optimize.root(function, initial_x, method='lm')
@@ -52,6 +54,12 @@ class CoveredCallAMM():
         self.reserves_riskless = self.K*norm.cdf(norm.ppf(1-initial_x) - self.sigma*self.tau)
         self.fee = fee
         self.accured_fees = [0,0]
+
+    def getRisklessGivenRisky(self, risky): 
+        return self.K*norm.cdf(norm.ppf(1 - risky) - self.sigma*np.sqrt(self.tau))
+
+    def getRiskyGivenRiskless(self, riskless):
+        return 1 - norm.cdf(norm.ppf(riskless/self.K) + self.sigma*np.sqrt(self.tau))
 
     def swapAmountInRisky(self, amount_in):
         '''
@@ -93,14 +101,14 @@ class CoveredCallAMM():
         Get the current spot price of the risky asset, denominated in the riskless asset.
         '''
         #TODO: Calculate analytic spot price formula, including at the limits, in order to avoid solver precision issues
-        def invariant(x):
-            return blackScholesCoveredCall(x, self.K, self.sigma, self.tau)
+        # def invariant(x):
+        #     return blackScholesCoveredCall(x, self.K, self.sigma, self.tau)
         #Get gradient vector at the given reserves
-        gradient = scipy.optimize.approx_fprime([self.reserves_risky, self.reserves_riskless], invariant, 1e-10)
+        # gradient = scipy.optimize.approx_fprime([self.reserves_risky, self.reserves_riskless], invariant, 1e-10)
         #Calculate spot price denominated in the riskless asset
-        spot = gradient[0]/gradient[1]
-        return spot
-        # return blackScholesCoveredCallSpotPrice(self.reserves_risky, self.K, self.sigma, self.tau)
+        # spot = gradient[0]/gradient[1]
+        # return spot
+        return blackScholesCoveredCallSpotPrice(self.reserves_risky, self.K, self.sigma, self.tau)
 
     def getSpotPriceAfterVirtualSwapAmountInRiskless(self, amount_in):
         '''
@@ -127,4 +135,13 @@ class CoveredCallAMM():
         self.reserves_risky = current_reserves_risky
         return spot_price_after_trade
 
+    def getRiskyReservesGivenSpotPrice(self, S):
+        '''
+        Given some spot price S, get the risky reserves corresponding to that spot price by solving the S = -y' = -f'(x) for x.
+        '''
+        def func(x):
+            return S - blackScholesCoveredCallSpotPrice(x, self.K, self.sigma, self.tau)
+        sol = scipy.optimize.root(func, self.reserves_risky, method='lm')
+        reserves_risky = sol.x[0]
+        return reserves_risky
 
