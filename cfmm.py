@@ -8,7 +8,7 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 import numpy as np
 
-EPSILON = 1e-8
+EPSILON = 1e-10
 
 def blackScholesCoveredCall(x, K, sigma, tau):
     '''
@@ -135,9 +135,11 @@ class CoveredCallAMM():
         '''
         current_reserves_riskless = self.reserves_riskless
         current_reserves_risky = self.reserves_risky
+        current_invariant = self.invariant
         _, marginal_price = self.swapAmountInRisky(EPSILON)
         self.reserves_riskless = current_reserves_riskless
         self.reserves_risky = current_reserves_risky
+        self.invariant = current_invariant
         return marginal_price
 
 
@@ -148,10 +150,12 @@ class CoveredCallAMM():
         #Save current reserves to revert after operation (we want the trade to be virtual)
         current_reserves_riskless = self.reserves_riskless
         current_reserves_risky = self.reserves_risky
+        current_invariant = self.invariant
         _ = self.swapAmountInRiskless(amount_in)
         spot_price_after_trade = self.getSpotPrice()
         self.reserves_riskless = current_reserves_riskless
         self.reserves_risky = current_reserves_risky
+        self.invariant = current_invariant
         return spot_price_after_trade
 
     def getSpotPriceAfterVirtualSwapAmountInRisky(self, amount_in):
@@ -160,22 +164,27 @@ class CoveredCallAMM():
         '''
         current_reserves_riskless = self.reserves_riskless
         current_reserves_risky = self.reserves_risky
+        current_invariant = self.invariant
         _ = self.swapAmountInRisky(amount_in)
         spot_price_after_trade = self.getSpotPrice()
         self.reserves_riskless = current_reserves_riskless
         self.reserves_risky = current_reserves_risky
+        self.invariant = current_invariant
         return spot_price_after_trade
 
     def getMarginalPriceAfterVirtualSwapAmountInRiskless(self, amount_in): 
         '''
         Get the marginal price that *would* result from swapping in some amount of the riskless asset.
         '''
+        amount_in = float(amount_in)
         current_reserves_riskless = self.reserves_riskless
         current_reserves_risky = self.reserves_risky
+        current_invariant = self.invariant
         _, _ = self.swapAmountInRiskless(amount_in)
         marginal_price_after_trade = self.getMarginalPrice()
         self.reserves_riskless = current_reserves_riskless
         self.reserves_risky = current_reserves_risky
+        self.invariant = current_invariant
         return marginal_price_after_trade
 
 
@@ -183,12 +192,15 @@ class CoveredCallAMM():
         '''
         Get the marginal price that *would* result from swapping in some amount of the risky asset.
         '''
+        amount_in = float(amount_in)
         current_reserves_riskless = self.reserves_riskless
         current_reserves_risky = self.reserves_risky
+        current_invariant = self.invariant
         _, _ = self.swapAmountInRisky(amount_in)
         marginal_price_after_trade = self.getMarginalPrice()
         self.reserves_riskless = current_reserves_riskless
         self.reserves_risky = current_reserves_risky
+        self.invariant = current_invariant
         return marginal_price_after_trade
 
     def getRiskyReservesGivenSpotPrice(self, S):
