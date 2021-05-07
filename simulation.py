@@ -5,29 +5,18 @@ import time_series
 import matplotlib.pyplot as plt 
 import numpy as np
 
+#Annualized volatility of 58%
 sigma = 0.58
-tau = 1
+#Simulation spanning a year
+initial_tau = 1
 
-Pool = cfmm.CoveredCallAMM(0.5, 1000, sigma, tau, 0)
-
-#Quick test
-
-print(Pool.reserves_risky)
-print(Pool.reserves_riskless)
-print(Pool.getSpotPrice())
-
+Pool = cfmm.CoveredCallAMM(0.5, 1500, sigma, initial_tau, 0.05)
 Arbitrager = arb.Arbitrager()
-
-# spot_price = Pool.getSpotPrice()
-# reference_price = 1.1*spot_price
-# Arbitrager.arbitrageExactly(reference_price, Pool)
-
-# print("Reference price: ", reference_price)
-# print("Spot price after trade: ", Pool.getSpotPrice())
 
 T = 365
 mu = 0.00003
-sigma = 0.5/np.sqrt(T)
+#Daily vol from annualized vol
+sigma = 0.58/np.sqrt(T)
 S0 = 1000
 dt = 1
 t, S = time_series.generateGBM(T, mu, sigma, S0, dt)
@@ -37,16 +26,35 @@ t, S = time_series.generateGBM(T, mu, sigma, S0, dt)
 
 #Store spot prices after each step
 spot_price_array = []
+#Marginal price affter each step
+marginal_price_array = []
+
+#Array to store the theoretical value of LP shares in the case of a pool with zero fees
+theoretical_lp_value_array = []
+#Effective value of LP shares with fees
+effective_lp_value_array = []
 
 
 for i in range(len(S)):
+    print(i)
     if i % 100 == 1: 
         print("In progress...")
-    Arbitrager.arbitrageExactly(S[i], Pool)
+    #Update pool's time to maturity
+    # Pool.tau = initial_tau - t[i]/365
+    #Perform arbitrage step
+    Arbitrager.arbitrageExactlyNonZeroFee(S[i], Pool)
+    #Get reserves given the reference price in the zero fees case
+    theoretical_reserves_risky = Pool.getRiskyReservesGivenSpotPrice(S[i])
+    theoretical_reserves_riskless = Pool.getRisklessGivenRisky(theoretical_reserves_risky)
+    theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
+    theoretical_lp_value_array.append(theoretical_lp_value)
+    effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
     spot_price_array.append(Pool.getSpotPrice())
+    marginal_price_array.append(Pool.getMarginalPrice())
 
 plt.plot(t, S, label = "Reference price")
 plt.plot(t, spot_price_array, label = "Pool spot price")
+plt.plot(t, marginal_price_array, label = "Pool marginal price")
 plt.title("Arbitrage between CFMM and reference price")
 plt.xlabel("Time steps (days)")
 plt.ylabel("Price (USD)")
