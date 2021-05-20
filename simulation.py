@@ -40,7 +40,7 @@ for i in range(len(S)):
     # if i % 36 == 0: 
     #     print("In progress... ", round(i/365), "%")
     #Update pool's time to maturity
-    # Pool.tau = initial_tau - t[i]/365
+    Pool.tau = initial_tau - t[i]/365
     #Perform arbitrage step
     Arbitrager.arbitrageExactly(S[i], Pool)
     #Get reserves given the reference price in the zero fees case
