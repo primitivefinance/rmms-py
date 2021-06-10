@@ -7,6 +7,8 @@ import numpy as np
 from scipy.stats import norm
 from scipy import optimize
 
+EPSILON = 1e-3
+
 def quantilePrime(x):
     return norm.pdf(norm.ppf(x))**-1
 
@@ -34,6 +36,7 @@ class Arbitrager():
         sigma = Pool.sigma
         tau = Pool.tau
 
+
         #Marginal price of selling epsilon risky
         price_sell_risky = gamma*K*norm.pdf(norm.ppf(1 - R1) - sigma*np.sqrt(tau))*quantilePrime(1 - R1)
         #Marginal price of buying epsilon risky
@@ -41,20 +44,24 @@ class Arbitrager():
 
         #Market price
         m = market_price
+        
+        
 
         #If the price of selling epsilon of the risky asset is above the market price, we buy the optimal amount of the risky asset on the market and immediately sell it on the CFMM = **swap amount in risky**.
         if price_sell_risky > m:
             #Solve for the optimal amount in
             def func(amount_in):
-                return gamma*K*norm.pdf(norm.ppf(1 - R1 - gamma*amount_in) - sigma*np.sqrt(tau))*quantilePrime(1 - R1 - gamma*amount_in) - m
-            sol = scipy.optimize.root(func, Pool.reserves_risky)
-            optimal_trade = sol.x[0]
+                result = gamma*K*norm.pdf(norm.ppf(1 - R1 - gamma*amount_in) - sigma*np.sqrt(tau))*quantilePrime(1 - R1 - gamma*amount_in) - m
+                return result
+            # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky > m")
+            optimal_trade = scipy.optimize.bisect(func, 0, (1 - R1 - EPSILON))
             _,_ = Pool.swapAmountInRisky(optimal_trade)
         
         #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
         elif price_buy_risky < m:
             def func(amount_in):
-                return 1/(gamma * norm.pdf(norm.ppf((R2 + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R2 + gamma*amount_in - k)/K)*(1/K)) - m
-            sol = scipy.optimize.root(func, Pool.reserves_riskless)
-            optimal_trade = sol.x[0]
+                result = 1/(gamma * norm.pdf(norm.ppf((R2 + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R2 + gamma*amount_in - k)/K)*(1/K)) - m
+                return result
+            # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky < m")
+            optimal_trade = scipy.optimize.bisect(func, 0, (K - R2 - EPSILON))
             _,_ = Pool.swapAmountInRiskless(optimal_trade)
