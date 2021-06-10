@@ -132,6 +132,6 @@ class CoveredCallAMM():
         '''
         def func(x):
             return S - blackScholesCoveredCallSpotPrice(x, self.K, self.sigma, self.tau)
-        sol = scipy.optimize.root(func, self.reserves_risky, method='lm')
+        sol = scipy.optimize.root(func, self.reserves_risky)
         reserves_risky = sol.x[0]
         return reserves_risky
