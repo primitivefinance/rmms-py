@@ -82,6 +82,26 @@ class CoveredCallAMM():
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
+    def virtualSwapAmountInRisky(self, amount_in): 
+        '''
+        Perform a swap and then revert the state of the pool. Useful to estimate the effective price that one would get in a non analytical way (what actually happens at the end of the day in the pool)
+        '''
+        invariant = self.invariant
+        reserves_risky = self.reserves_risky
+        reserves_riskless = self.reserves_riskless
+        gamma = 1 - self.fee
+        new_reserves_riskless = self.K*norm.cdf(norm.ppf(1-(gamma*amount_in+self.reserves_risky)) - self.sigma*np.sqrt(self.tau)) + self.invariant
+        amount_out = self.reserves_riskless - new_reserves_riskless
+        self.reserves_risky += amount_in
+        self.reserves_riskless -= amount_out
+        #Update invariant
+        self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
+        effective_price_in_riskless = amount_out/amount_in
+        self.invariant = invariant
+        self.reserves_risky = reserves_risky
+        self.reserves_riskless = reserves_riskless
+        return amount_out, effective_price_in_riskless
+
     def swapAmountInRiskless(self, amount_in):
         '''
         Swap in some amount of the riskless asset and get some amount of the risky asset in return.
@@ -95,6 +115,24 @@ class CoveredCallAMM():
         self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
+
+    def virtualSwapAmountInRiskless(self, amount_in): 
+        invariant = self.invariant
+        reserves_risky = self.reserves_risky
+        reserves_riskless = self.reserves_riskless
+        gamma = 1 - self.fee
+        new_reserves_risky = 1 - norm.cdf(norm.ppf(((self.reserves_riskless + gamma*amount_in)-self.invariant)/self.K) + self.sigma*np.sqrt(self.tau))
+        amount_out = self.reserves_risky - new_reserves_risky
+        self.reserves_riskless += amount_in
+        self.reserves_risky -= amount_out
+        #Update invariant
+        self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
+        effective_price_in_riskless = amount_in/amount_out
+        self.invariant = invariant
+        self.reserves_risky = reserves_risky
+        self.reserves_riskless = reserves_riskless
+        return amount_out, effective_price_in_riskless
+
 
     def getSpotPrice(self):
         '''
