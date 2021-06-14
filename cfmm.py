@@ -20,9 +20,15 @@ def blackScholesCoveredCall(x, K, sigma, tau):
 # #For analytic spot price formula
 
 def quantilePrime(x):
+    '''
+    Analytical formula for the derivative of the quantile function (inverse of the CDF).
+    '''
     return norm.pdf(norm.ppf(x))**-1
 
 def blackScholesCoveredCallSpotPrice(x, K, sigma, tau):
+    '''
+    Analytical formula for the spot price (reported price) of the BS covered call CFMM in the zero fees case.
+    '''
     return K*norm.pdf(norm.ppf(1 - x) - sigma*np.sqrt(tau))*quantilePrime(1-x)
 
 class CoveredCallAMM():
@@ -117,6 +123,9 @@ class CoveredCallAMM():
         return amount_out, effective_price_in_riskless
 
     def virtualSwapAmountInRiskless(self, amount_in): 
+        '''
+        Perform a swap and then revert the state of the pool. Useful to estimate the effective price that one would get in a non analytical way (what actually happens at the end of the day in the pool)
+        '''
         invariant = self.invariant
         reserves_risky = self.reserves_risky
         reserves_riskless = self.reserves_riskless
@@ -136,13 +145,13 @@ class CoveredCallAMM():
 
     def getSpotPrice(self):
         '''
-        Get the current spot price of the risky asset, denominated in the riskless asset, only exact in the no-fee case.
+        Get the current spot price (ie "reported price" using CFMM jargon) of the risky asset, denominated in the riskless asset, only exact in the no-fee case.
         '''
         return blackScholesCoveredCallSpotPrice(self.reserves_risky, self.K, self.sigma, self.tau)
 
     def getMarginalPriceSwapRiskyIn(self, amount_in):
         '''
-        Returns the marginal price of a trade of size amount_in (in the risky asset) with the current reserves (in RISKLESS.RISKY-1)
+        Returns the marginal price after a trade of size amount_in (in the risky asset) with the current reserves (in RISKLESS.RISKY-1). See https://arxiv.org/pdf/2012.08040.pdf 
         '''
         gamma = 1 - self.fee
         R = self.reserves_risky 
@@ -154,7 +163,7 @@ class CoveredCallAMM():
 
     def getMarginalPriceSwapRisklessIn(self, amount_in):
         '''
-        Returns the marginal price of a trade of size amount_in (in the riskless asset) with the current reserves (in RISKLESS.RISKY-1)
+        Returns the marginal price of a trade of size amount_in (in the riskless asset) with the current reserves (in RISKLESS.RISKY-1) See https://arxiv.org/pdf/2012.08040.pdf  
         '''
         gamma = 1 - self.fee
         R = self.reserves_riskless 
