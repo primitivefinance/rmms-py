@@ -10,7 +10,7 @@ sigma = 0.58
 #Simulation spanning a year
 initial_tau = 1
 
-Pool = cfmm.CoveredCallAMM(0.5, 1500, sigma, initial_tau, 0.05)
+Pool = cfmm.CoveredCallAMM(0.5, 1500, sigma, initial_tau, 0.000003)
 Arbitrager = arb.Arbitrager()
 
 T = 365
@@ -20,6 +20,8 @@ sigma = 0.58/np.sqrt(T)
 S0 = 1000
 dt = 1
 t, S = time_series.generateGBM(T, mu, sigma, S0, dt)
+
+arb_start_balance = 100000
 
 # plt.plot(t, S)
 # plt.show()
@@ -33,15 +35,15 @@ marginal_price_array = []
 theoretical_lp_value_array = []
 #Effective value of LP shares with fees
 effective_lp_value_array = []
+risky_reserve_value_array = []
+riskless_reserve_value_array = []
 
 
 for i in range(len(S)):
-    print(i)
-    if i % 100 == 1: 
-        print("In progress...")
     #Update pool's time to maturity
     # Pool.tau = initial_tau - t[i]/365
     #Perform arbitrage step
+    print(Pool.reserves_risky)
     Arbitrager.arbitrageExactlyNonZeroFee(S[i], Pool)
     #Get reserves given the reference price in the zero fees case
     theoretical_reserves_risky = Pool.getRiskyReservesGivenSpotPrice(S[i])
@@ -49,12 +51,18 @@ for i in range(len(S)):
     theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
     theoretical_lp_value_array.append(theoretical_lp_value)
     effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
-    spot_price_array.append(Pool.getSpotPrice())
+    risky_reserve_value_array.append(Pool.reserves_risky*S[i])
+    riskless_reserve_value_array.append(Pool.reserves_riskless)
     marginal_price_array.append(Pool.getMarginalPrice())
+    print('effective LP value: ', effective_lp_value_array[i])
+    print('theoretical LP value: ', theoretical_lp_value_array[i])
+    print('Day: ', i)
 
 plt.plot(t, S, label = "Reference price")
-plt.plot(t, spot_price_array, label = "Pool spot price")
-plt.plot(t, marginal_price_array, label = "Pool marginal price")
+plt.plot(t, risky_reserve_value_array, label = "Pool Risky Balance")
+plt.plot(t, riskless_reserve_value_array, label = "Pool Riskless Balance")
+plt.plot(t, effective_lp_value_array, label = "Effective LP Value")
+plt.plot(t, theoretical_lp_value_array, label = "Theoretical LP value")
 plt.title("Arbitrage between CFMM and reference price")
 plt.xlabel("Time steps (days)")
 plt.ylabel("Price (USD)")

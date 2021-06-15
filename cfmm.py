@@ -56,6 +56,8 @@ class CoveredCallAMM():
         self.reserves_riskless = self.K*norm.cdf(norm.ppf(1-initial_x) - self.sigma*self.tau)
         self.fee = fee
         self.accured_fees = [0,0]
+        self.arb_risky_balance = 0 
+        self.arb_riskless_balance = 0 
 
     def getRisklessGivenRisky(self, risky): 
         return self.K*norm.cdf(norm.ppf(1 - risky) - self.sigma*np.sqrt(self.tau))
