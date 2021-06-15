@@ -58,6 +58,12 @@ for i in range(len(S)):
     print('theoretical LP value: ', theoretical_lp_value_array[i])
     print('Day: ', i)
 
+print('Start Risky Value: ', risky_reserve_value_array[0])
+print('Start Riskless Value: ', riskless_reserve_value_array[0])
+print('End Reference Pricel ', S[364])
+print('End Risky Value: ', risky_reserve_value_array[364])
+print('End Riskless Value: ', riskless_reserve_value_array[364])
+print(Pool.accured_fees)
 plt.plot(t, S, label = "Reference price")
 plt.plot(t, risky_reserve_value_array, label = "Pool Risky Balance")
 plt.plot(t, riskless_reserve_value_array, label = "Pool Riskless Balance")

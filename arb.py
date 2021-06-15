@@ -45,7 +45,7 @@ class Arbitrager():
         Arbitrage the difference between marginal price in the pool and the reference price at the time of the call of the function in the non-zero fee case.
         '''
         amm_marginal_price = Pool.getMarginalPrice()
-        if amm_marginal_price - 200 > reference_price: 
+        if amm_marginal_price - 25 > reference_price: 
             #We want to minimize marginal_price_after_trade(amount_in) - reference_price
             def func(x):
                 return Pool.getMarginalPriceAfterVirtualSwapAmountInRisky(x) - reference_price
@@ -60,7 +60,7 @@ class Arbitrager():
             print("riskless balance delta: ", Pool.arb_riskless_balance)
             print("cfmm risky balance: ", Pool.reserves_risky)
             print("cfmm riskless balance: ", Pool.reserves_riskless)
-        elif amm_marginal_price + 200 < reference_price:
+        elif amm_marginal_price + 25 < reference_price:
             def func(y):
                 return Pool.getMarginalPriceAfterVirtualSwapAmountInRiskless(y) - reference_price
             sol = scipy.optimize.bisect(func, 1e-15, Pool.K - Pool.reserves_riskless - 1e-15)
