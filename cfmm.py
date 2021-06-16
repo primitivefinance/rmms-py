@@ -10,6 +10,11 @@ import numpy as np
 
 EPSILON = 1e-10
 
+def nonnegative(x):
+    if isinstance(x, np.ndarray):
+        return (x >= 0).all()
+    return x >= 0
+
 def blackScholesCoveredCall(x, K, sigma, tau):
     '''
     Return value of the BS covered call trading function for given reserves and parameters.
@@ -78,13 +83,14 @@ class CoveredCallAMM():
         amount_out: the amount to be given out to the trader
         effective_price_in_risky: the effective price of the executed trade
         '''
+        assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_riskless = self.K*norm.cdf(norm.ppf(1-(gamma*amount_in+self.reserves_risky)) - self.sigma*np.sqrt(self.tau)) + self.invariant
+        new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in) + self.invariant
         amount_out = self.reserves_riskless - new_reserves_riskless
         self.reserves_risky += amount_in
         self.reserves_riskless -= amount_out
         #Update invariant
-        self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
+        self.invariant = self.reserves_riskless - self.getRisklessGivenRisky(self.reserves_risky) 
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
@@ -92,26 +98,18 @@ class CoveredCallAMM():
         '''
         Perform a swap and then revert the state of the pool. Useful to estimate the effective price that one would get in a non analytical way (what actually happens at the end of the day in the pool)
         '''
-        invariant = self.invariant
-        reserves_risky = self.reserves_risky
-        reserves_riskless = self.reserves_riskless
+        assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_riskless = self.K*norm.cdf(norm.ppf(1-(gamma*amount_in+self.reserves_risky)) - self.sigma*np.sqrt(self.tau)) + self.invariant
+        new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in) + self.invariant
         amount_out = self.reserves_riskless - new_reserves_riskless
-        self.reserves_risky += amount_in
-        self.reserves_riskless -= amount_out
-        #Update invariant
-        self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
         effective_price_in_riskless = amount_out/amount_in
-        self.invariant = invariant
-        self.reserves_risky = reserves_risky
-        self.reserves_riskless = reserves_riskless
         return amount_out, effective_price_in_riskless
 
     def swapAmountInRiskless(self, amount_in):
         '''
         Swap in some amount of the riskless asset and get some amount of the risky asset in return.
         '''
+        assert nonnegative(amount_in)
         gamma = 1 - self.fee
         new_reserves_risky = 1 - norm.cdf(norm.ppf(((self.reserves_riskless + gamma*amount_in)-self.invariant)/self.K) + self.sigma*np.sqrt(self.tau))
         amount_out = self.reserves_risky - new_reserves_risky
@@ -126,20 +124,11 @@ class CoveredCallAMM():
         '''
         Perform a swap and then revert the state of the pool. Useful to estimate the effective price that one would get in a non analytical way (what actually happens at the end of the day in the pool)
         '''
-        invariant = self.invariant
-        reserves_risky = self.reserves_risky
-        reserves_riskless = self.reserves_riskless
+        assert nonnegative(amount_in)
         gamma = 1 - self.fee
         new_reserves_risky = 1 - norm.cdf(norm.ppf(((self.reserves_riskless + gamma*amount_in)-self.invariant)/self.K) + self.sigma*np.sqrt(self.tau))
         amount_out = self.reserves_risky - new_reserves_risky
-        self.reserves_riskless += amount_in
-        self.reserves_risky -= amount_out
-        #Update invariant
-        self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
         effective_price_in_riskless = amount_in/amount_out
-        self.invariant = invariant
-        self.reserves_risky = reserves_risky
-        self.reserves_riskless = reserves_riskless
         return amount_out, effective_price_in_riskless
 
 
@@ -153,6 +142,7 @@ class CoveredCallAMM():
         '''
         Returns the marginal price after a trade of size amount_in (in the risky asset) with the current reserves (in RISKLESS.RISKY-1). See https://arxiv.org/pdf/2012.08040.pdf 
         '''
+        assert nonnegative(amount_in)
         gamma = 1 - self.fee
         R = self.reserves_risky 
         k = self.invariant
@@ -165,6 +155,7 @@ class CoveredCallAMM():
         '''
         Returns the marginal price of a trade of size amount_in (in the riskless asset) with the current reserves (in RISKLESS.RISKY-1) See https://arxiv.org/pdf/2012.08040.pdf  
         '''
+        assert nonnegative(amount_in)
         gamma = 1 - self.fee
         R = self.reserves_riskless 
         k = self.invariant

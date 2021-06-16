@@ -9,7 +9,6 @@ from scipy.stats import norm
 
 import math
 
-from random import seed
 
 # #For analytic spot price formula
 
