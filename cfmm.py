@@ -111,12 +111,12 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_risky = 1 - norm.cdf(norm.ppf(((self.reserves_riskless + gamma*amount_in)-self.invariant)/self.K) + self.sigma*np.sqrt(self.tau))
+        new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in - self.invariant)
         amount_out = self.reserves_risky - new_reserves_risky
         self.reserves_riskless += amount_in
         self.reserves_risky -= amount_out
         #Update invariant
-        self.invariant = self.reserves_riskless - self.K*norm.cdf(norm.ppf(1 - self.reserves_risky) - self.sigma*np.sqrt(self.tau))
+        self.invariant = self.reserves_riskless - self.getRisklessGivenRisky(self.reserves_risky)
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 

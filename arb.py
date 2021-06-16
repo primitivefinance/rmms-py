@@ -38,21 +38,23 @@ class Arbitrager():
 
 
         #Marginal price of selling epsilon risky
-        price_sell_risky = gamma*K*norm.pdf(norm.ppf(1 - R1) - sigma*np.sqrt(tau))*quantilePrime(1 - R1)
+        # price_sell_risky = gamma*K*norm.pdf(norm.ppf(1 - R1) - sigma*np.sqrt(tau))*quantilePrime(1 - R1)
+        price_sell_risky = Pool.getMarginalPriceSwapRiskyIn(0)
         #Marginal price of buying epsilon risky
-        price_buy_risky = 1/(gamma * norm.pdf(norm.ppf((R2 -k)/K) + sigma*np.sqrt(tau))*quantilePrime((R2 - k)/K)*(1/K))
+        price_buy_risky = Pool.getMarginalPriceSwapRisklessIn(0)
+        
+        #print(f"sell price {price_sell_risky}")
+        #print(f"buy price {price_buy_risky}")
+        # print(f"market price {market_price}")
 
         #Market price
         m = market_price
-        
-        
 
         #If the price of selling epsilon of the risky asset is above the market price, we buy the optimal amount of the risky asset on the market and immediately sell it on the CFMM = **swap amount in risky**.
-        if price_sell_risky - m > 1e-8:
+        if price_sell_risky > m + 1e-8:
             #Solve for the optimal amount in
             def func(amount_in):
-                result = gamma*K*norm.pdf(norm.ppf(1 - R1 - gamma*amount_in) - sigma*np.sqrt(tau))*quantilePrime(1 - R1 - gamma*amount_in) - m
-                return result
+                return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
             # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky > m")
             optimal_trade = scipy.optimize.bisect(func, 0, (1 - R1 - EPSILON))
             # print("result = ", func(optimal_trade))
@@ -60,24 +62,21 @@ class Arbitrager():
             amount_out, _ = Pool.virtualSwapAmountInRisky(optimal_trade)
             #The amount of the riskless asset we get after making the swap must be higher than the value in the riskless asset at which we obtained the amount in on the market
             profit = amount_out - optimal_trade*m
-            print(profit)
-            if profit > 0:
-                _, _ = Pool.swapAmountInRisky(optimal_trade)
+            print(f"sell profit {profit}")
+            _, _ = Pool.swapAmountInRisky(optimal_trade)
             # print("profit = ", profit)
         
         #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
-        elif price_buy_risky - m < 1e-8:
+        elif price_buy_risky < m - 1e-8:
             def func(amount_in):
-                result = 1/(gamma * norm.pdf(norm.ppf((R2 + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R2 + gamma*amount_in - k)/K)*(1/K)) - m
-                return result
+                return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
             # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky < m")
             optimal_trade = scipy.optimize.bisect(func, 0, (K - R2 - EPSILON))
             # print("result = ", func(optimal_trade))
             # print(optimal_trade, " USD in")
             amount_out, _ = Pool.virtualSwapAmountInRiskless(optimal_trade)
             #The amount of risky asset we get out times the market price must result in an amount of riskless asset higher than what we initially put in the CFMM 
-            profit = amount_out*m - optimal_trade
-            print(profit)
-            if profit > 0:
-                _, _ = Pool.swapAmountInRiskless(optimal_trade)
+            profit = optimal_trade*m - amount_out
+            print(f"buy profit {profit}")
+            _, _ = Pool.swapAmountInRiskless(optimal_trade)
             # print("profit = ", profit)
