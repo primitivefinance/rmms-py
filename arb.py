@@ -43,9 +43,9 @@ class Arbitrager():
         #Marginal price of buying epsilon risky
         price_buy_risky = Pool.getMarginalPriceSwapRisklessIn(0)
         
-        #print(f"sell price {price_sell_risky}")
-        #print(f"buy price {price_buy_risky}")
-        # print(f"market price {market_price}")
+        print(f"sell price {price_sell_risky}")
+        print(f"buy price {price_buy_risky}")
+        print(f"market price {market_price}")
 
         #Market price
         m = market_price

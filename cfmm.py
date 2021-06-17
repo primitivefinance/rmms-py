@@ -26,13 +26,15 @@ def blackScholesCoveredCall(x, K, sigma, tau):
 
 def quantilePrime(x):
     '''
-    Analytical formula for the derivative of the quantile function (inverse of the CDF).
+    Analytical formula for the derivative of the quantile function (inverse of
+    the CDF).
     '''
     return norm.pdf(norm.ppf(x))**-1
 
 def blackScholesCoveredCallSpotPrice(x, K, sigma, tau):
     '''
-    Analytical formula for the spot price (reported price) of the BS covered call CFMM in the zero fees case.
+    Analytical formula for the spot price (reported price) of the BS covered
+    call CFMM in the zero fees case.
     '''
     return K*norm.pdf(norm.ppf(1 - x) - sigma*np.sqrt(tau))*quantilePrime(1-x)
 
@@ -48,12 +50,16 @@ class CoveredCallAMM():
     reserves_riskless: float
         the reserves of the AMM pool in the riskless asset
     accrued_fees: list[float]
-        fees accrued by the pool over time, separate from the reserves to make sure we only execute feasible trades, ordered in risky and then riskless asset
+        fees accrued by the pool over time, separate from the reserves to make
+        sure we only execute feasible trades, ordered in risky and then
+        riskless asset
     '''
 
     def __init__(self, initial_x, K, sigma, tau, fee):
         '''
-        Initialize the AMM pool with a starting risky asset reserve as an input, calculate the corresponding riskless asset reserve needed to satisfy the trading function equation.
+        Initialize the AMM pool with a starting risky asset reserve as an
+        input, calculate the corresponding riskless asset reserve needed to
+        satisfy the trading function equation.
         '''
         self.reserves_risky = initial_x
         self.K = K
@@ -96,7 +102,9 @@ class CoveredCallAMM():
 
     def virtualSwapAmountInRisky(self, amount_in): 
         '''
-        Perform a swap and then revert the state of the pool. Useful to estimate the effective price that one would get in a non analytical way (what actually happens at the end of the day in the pool)
+        Perform a swap and then revert the state of the pool. Useful to
+        estimate the effective price that one would get in a non analytical way
+        (what actually happens at the end of the day in the pool)
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -107,7 +115,8 @@ class CoveredCallAMM():
 
     def swapAmountInRiskless(self, amount_in):
         '''
-        Swap in some amount of the riskless asset and get some amount of the risky asset in return.
+        Swap in some amount of the riskless asset and get some amount of the
+        risky asset in return.
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -122,7 +131,9 @@ class CoveredCallAMM():
 
     def virtualSwapAmountInRiskless(self, amount_in): 
         '''
-        Perform a swap and then revert the state of the pool. Useful to estimate the effective price that one would get in a non analytical way (what actually happens at the end of the day in the pool)
+        Perform a swap and then revert the state of the pool. Useful to
+        estimate the effective price that one would get in a non analytical way
+        (what actually happens at the end of the day in the pool)
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -134,13 +145,17 @@ class CoveredCallAMM():
 
     def getSpotPrice(self):
         '''
-        Get the current spot price (ie "reported price" using CFMM jargon) of the risky asset, denominated in the riskless asset, only exact in the no-fee case.
+        Get the current spot price (ie "reported price" using CFMM jargon) of
+        the risky asset, denominated in the riskless asset, only exact in the
+        no-fee case.
         '''
         return blackScholesCoveredCallSpotPrice(self.reserves_risky, self.K, self.sigma, self.tau)
 
     def getMarginalPriceSwapRiskyIn(self, amount_in):
         '''
-        Returns the marginal price after a trade of size amount_in (in the risky asset) with the current reserves (in RISKLESS.RISKY-1). See https://arxiv.org/pdf/2012.08040.pdf 
+        Returns the marginal price after a trade of size amount_in (in the
+        risky asset) with the current reserves (in RISKLESS.RISKY-1).
+        See https://arxiv.org/pdf/2012.08040.pdf 
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -153,7 +168,9 @@ class CoveredCallAMM():
 
     def getMarginalPriceSwapRisklessIn(self, amount_in):
         '''
-        Returns the marginal price of a trade of size amount_in (in the riskless asset) with the current reserves (in RISKLESS.RISKY-1) See https://arxiv.org/pdf/2012.08040.pdf  
+        Returns the marginal price of a trade of size amount_in (in the
+        riskless asset) with the current reserves (in RISKLESS.RISKY-1)
+        See https://arxiv.org/pdf/2012.08040.pdf  
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -166,7 +183,9 @@ class CoveredCallAMM():
 
     def getRiskyReservesGivenSpotPrice(self, S):
         '''
-        Given some spot price S, get the risky reserves corresponding to that spot price by solving the S = -y' = -f'(x) for x. Only useful in the no-fee case.
+        Given some spot price S, get the risky reserves corresponding to that
+        spot price by solving the S = -y' = -f'(x) for x. Only useful in the
+        no-fee case.
         '''
         def func(x):
             return S - blackScholesCoveredCallSpotPrice(x, self.K, self.sigma, self.tau)
