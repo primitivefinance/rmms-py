@@ -13,6 +13,7 @@ from random import seed
 
 # #For analytic spot price formula
 
+EPSILON = 1e-8
 
 def getRiskyReservesGivenSpotPrice(S, K, sigma, tau):
     '''
@@ -84,6 +85,9 @@ for s in seeds:
         dt = 1
         t, S = time_series.generateGBM(T, mu, sigma, S0, dt)
 
+        #Test constant price
+        # S = 1300*np.ones(365)
+
         length = len(S)
         constant_price = []
         for i in range(length):
@@ -127,8 +131,12 @@ for s in seeds:
                 theoretical_lp_value_array.append(theoretical_lp_value)
                 effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
                 spot_price_array.append(Pool.getSpotPrice())
+                _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
+                _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
                 max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
                 min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
+                # max_marginal_price_array.append(max_marginal_price)
+                # min_marginal_price_array.append(min_marginal_price)
             if Pool.tau < 0.05: 
                 max_index = i
                 break
