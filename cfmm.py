@@ -75,10 +75,10 @@ class CoveredCallAMM():
         self.accured_fees = [0,0]
 
     def getRisklessGivenRisky(self, risky): 
-        return self.K*norm.cdf(norm.ppf(1 - risky) - self.sigma*np.sqrt(self.tau))
+        return self.invariant + self.K*norm.cdf(norm.ppf(1 - risky) - self.sigma*np.sqrt(self.tau))
 
     def getRiskyGivenRiskless(self, riskless):
-        return 1 - norm.cdf(norm.ppf(riskless/self.K) + self.sigma*np.sqrt(self.tau))
+        return 1 - norm.cdf(norm.ppf((riskless - self.invariant)/self.K) + self.sigma*np.sqrt(self.tau))
 
     def swapAmountInRisky(self, amount_in):
         '''
@@ -91,7 +91,7 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in) + self.invariant
+        new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in)
         amount_out = self.reserves_riskless - new_reserves_riskless
         self.reserves_risky += amount_in
         self.reserves_riskless -= amount_out
@@ -108,8 +108,13 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in) + self.invariant
+        print(f"Old reserves riskless = {self.reserves_riskless}")
+        print(f"Old reserves risky = {self.reserves_risky}")
+        new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in)
+        print(f"New reserves riskless = {new_reserves_riskless}")
+        print(f"New reserves risky = {self.reserves_risky + gamma*amount_in} \n")
         amount_out = self.reserves_riskless - new_reserves_riskless
+        assert nonnegative(amount_out)
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
@@ -120,7 +125,7 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in - self.invariant)
+        new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
         amount_out = self.reserves_risky - new_reserves_risky
         self.reserves_riskless += amount_in
         self.reserves_risky -= amount_out
@@ -137,8 +142,13 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in - self.invariant)
+        print(f"Old reserves riskless = {self.reserves_riskless}")
+        print(f"Old reserves risky = {self.reserves_risky}")
+        new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
+        print(f"New reserves risky = {new_reserves_risky}")
+        print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in} \n")
         amount_out = self.reserves_risky - new_reserves_risky
+        assert nonnegative(amount_out)
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 
