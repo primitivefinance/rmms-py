@@ -114,7 +114,7 @@ class CoveredCallAMM():
         print(f"New reserves riskless = {new_reserves_riskless}")
         print(f"New reserves risky = {self.reserves_risky + gamma*amount_in} \n")
         amount_out = self.reserves_riskless - new_reserves_riskless
-        assert nonnegative(amount_out)
+        # assert nonnegative(amount_out)
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
@@ -148,7 +148,7 @@ class CoveredCallAMM():
         print(f"New reserves risky = {new_reserves_risky}")
         print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in} \n")
         amount_out = self.reserves_risky - new_reserves_risky
-        assert nonnegative(amount_out)
+        # assert nonnegative(amount_out)
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 
