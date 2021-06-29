@@ -77,7 +77,7 @@ class Arbitrager():
             print("Optimal trade: ", optimal_trade, " USD in")
             amount_out, _ = Pool.virtualSwapAmountInRiskless(optimal_trade)
             #The amount of risky asset we get out times the market price must result in an amount of riskless asset higher than what we initially put in the CFMM 
-            profit = optimal_trade*m - amount_out
+            profit = amount_out*m - optimal_trade
             print(f"buy profit {profit} \n")
             if profit > 0:
                 _, _ = Pool.swapAmountInRiskless(optimal_trade)
