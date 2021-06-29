@@ -63,7 +63,8 @@ class Arbitrager():
             #The amount of the riskless asset we get after making the swap must be higher than the value in the riskless asset at which we obtained the amount in on the market
             profit = amount_out - optimal_trade*m
             print(f"sell profit {profit}")
-            _, _ = Pool.swapAmountInRisky(optimal_trade)
+            if profit > 0:
+                _, _ = Pool.swapAmountInRisky(optimal_trade)
             # print("profit = ", profit)
         
         #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
@@ -78,5 +79,6 @@ class Arbitrager():
             #The amount of risky asset we get out times the market price must result in an amount of riskless asset higher than what we initially put in the CFMM 
             profit = optimal_trade*m - amount_out
             print(f"buy profit {profit}")
-            _, _ = Pool.swapAmountInRiskless(optimal_trade)
+            if profit > 0:
+                _, _ = Pool.swapAmountInRiskless(optimal_trade)
             # print("profit = ", profit)
