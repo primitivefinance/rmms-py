@@ -45,7 +45,7 @@ class Arbitrager():
         
         print(f"sell price {price_sell_risky}")
         print(f"buy price {price_buy_risky}")
-        print(f"market price {market_price}")
+        print(f"market price {market_price} \n")
 
         #Market price
         m = market_price
@@ -65,6 +65,7 @@ class Arbitrager():
             print(f"sell profit {profit} \n")
             if profit > 0:
                 _, _ = Pool.swapAmountInRisky(optimal_trade)
+                print(f"Invariant after arbitrage = {Pool.invariant}")
             # print("profit = ", profit)
         
         #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
@@ -81,4 +82,5 @@ class Arbitrager():
             print(f"buy profit {profit} \n")
             if profit > 0:
                 _, _ = Pool.swapAmountInRiskless(optimal_trade)
+                print(f"Invariant after arbitrage = {Pool.invariant}")
             # print("profit = ", profit)
