@@ -138,7 +138,7 @@ for i in range(len(S)):
     theoretical_tau = initial_tau - t[i]/365
     
     if i % dtau == 0:
-    #     # print("hey")
+        # print("hey")
         Pool.tau = initial_tau - t[i]/365
         #Changing tau changes the value of the invariant even if no trade happens
         Pool.invariant = Pool.reserves_riskless - getRisklessGivenRisky(Pool.reserves_risky, Pool.K, Pool.sigma, Pool.tau)
@@ -158,8 +158,8 @@ for i in range(len(S)):
         theoretical_lp_value_array.append(theoretical_lp_value)
         effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
         spot_price_array.append(Pool.getSpotPrice())
-        _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
-        _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
+        # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
+        # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
         max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
         min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
         # max_marginal_price_array.append(max_marginal_price)
