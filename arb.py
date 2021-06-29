@@ -58,11 +58,11 @@ class Arbitrager():
             # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky > m")
             optimal_trade = scipy.optimize.bisect(func, 0, (1 - R1 - EPSILON))
             # print("result = ", func(optimal_trade))
-            # print(optimal_trade, " ETH in")
+            print("Optimal trade: ", optimal_trade, " ETH in")
             amount_out, _ = Pool.virtualSwapAmountInRisky(optimal_trade)
             #The amount of the riskless asset we get after making the swap must be higher than the value in the riskless asset at which we obtained the amount in on the market
             profit = amount_out - optimal_trade*m
-            print(f"sell profit {profit}")
+            print(f"sell profit {profit} \n")
             if profit > 0:
                 _, _ = Pool.swapAmountInRisky(optimal_trade)
             # print("profit = ", profit)
@@ -74,11 +74,11 @@ class Arbitrager():
             # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky < m")
             optimal_trade = scipy.optimize.bisect(func, 0, (K - R2 - EPSILON))
             # print("result = ", func(optimal_trade))
-            # print(optimal_trade, " USD in")
+            print("Optimal trade: ", optimal_trade, " USD in")
             amount_out, _ = Pool.virtualSwapAmountInRiskless(optimal_trade)
             #The amount of risky asset we get out times the market price must result in an amount of riskless asset higher than what we initially put in the CFMM 
             profit = optimal_trade*m - amount_out
-            print(f"buy profit {profit}")
+            print(f"buy profit {profit} \n")
             if profit > 0:
                 _, _ = Pool.swapAmountInRiskless(optimal_trade)
             # print("profit = ", profit)

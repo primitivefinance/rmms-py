@@ -95,6 +95,7 @@ class CoveredCallAMM():
         amount_out = self.reserves_riskless - new_reserves_riskless
         self.reserves_risky += amount_in
         self.reserves_riskless -= amount_out
+        assert nonnegative(new_reserves_riskless)
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRisky(self.reserves_risky) 
         effective_price_in_riskless = amount_out/amount_in
@@ -112,7 +113,8 @@ class CoveredCallAMM():
         print(f"Old reserves risky = {self.reserves_risky}")
         new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in)
         print(f"New reserves riskless = {new_reserves_riskless}")
-        print(f"New reserves risky = {self.reserves_risky + gamma*amount_in} \n")
+        assert nonnegative(new_reserves_riskless)
+        print(f"New reserves risky = {self.reserves_risky + gamma*amount_in}")
         amount_out = self.reserves_riskless - new_reserves_riskless
         # assert nonnegative(amount_out)
         effective_price_in_riskless = amount_out/amount_in
@@ -126,6 +128,7 @@ class CoveredCallAMM():
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
         new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
+        assert nonnegative(new_reserves_risky)
         amount_out = self.reserves_risky - new_reserves_risky
         self.reserves_riskless += amount_in
         self.reserves_risky -= amount_out
@@ -146,7 +149,8 @@ class CoveredCallAMM():
         print(f"Old reserves risky = {self.reserves_risky}")
         new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
         print(f"New reserves risky = {new_reserves_risky}")
-        print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in} \n")
+        assert nonnegative(new_reserves_risky)
+        print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in}")
         amount_out = self.reserves_risky - new_reserves_risky
         # assert nonnegative(amount_out)
         effective_price_in_riskless = amount_in/amount_out
