@@ -140,6 +140,8 @@ for i in range(len(S)):
     if i % dtau == 0:
     #     # print("hey")
         Pool.tau = initial_tau - t[i]/365
+        #Changing tau changes the value of the invariant even if no trade happens
+        Pool.invariant = Pool.reserves_riskless - getRisklessGivenRisky(Pool.reserves_risky, Pool.K, Pool.sigma, Pool.tau)
     # This is to avoid numerical errors that have been observed when getting 
     # closer to maturity. TODO: Figure out what causes these numerical errors.
 
