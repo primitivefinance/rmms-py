@@ -183,8 +183,8 @@ effective_lp_value_array = np.array(effective_lp_value_array)
 if PLOT_PRICE_EVOL: 
     plt.plot(t[0:max_index], S[0:max_index], label = "Reference price")
     # plt.plot(t[0:max_index], spot_price_array, label = "Pool spot price")
-    plt.plot(t[0:max_index], min_marginal_price_array, label = "Min pool price")
-    plt.plot(t[0:max_index], max_marginal_price_array, label = "Max pool price")
+    plt.plot(t[0:max_index], min_marginal_price_array[0:max_index], label = "Min pool price")
+    plt.plot(t[0:max_index], max_marginal_price_array[0:max_index], label = "Max pool price")
     plt.title("Arbitrage between CFMM and reference price\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=sigma_str, strike=K_str, gam=gamma_str, dt=str(dtau)) + ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Price (USD)")
@@ -198,8 +198,8 @@ if PLOT_PRICE_EVOL:
 
 if PLOT_PAYOFF_EVOL:
     plt.figure()
-    plt.plot(t[0:max_index], theoretical_lp_value_array, label = "Theoretical LP value")
-    plt.plot(t[0:max_index], effective_lp_value_array, label = "Effective LP value")
+    plt.plot(t[0:max_index], theoretical_lp_value_array[0:max_index], label = "Theoretical LP value")
+    plt.plot(t[0:max_index], effective_lp_value_array[0:max_index], label = "Effective LP value")
     plt.title("Value of LP shares\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=sigma_str, strike=K_str, gam=gamma_str, dt=str(dtau))+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Value (USD)")
