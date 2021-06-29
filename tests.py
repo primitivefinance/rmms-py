@@ -1,6 +1,17 @@
+from scipy.stats import norm
+
 import numpy as np
 import cfmm
 import matplotlib.pyplot as plt
+import arb
+
+
+def getRisklessGivenRisky(risky, K, sigma, tau): 
+    if risky == 0:
+        return K
+    elif risky == 1:
+        return 0
+    return K*norm.cdf(norm.ppf(1 - risky) - sigma*np.sqrt(tau))
 
 #Simulation parameters
 
@@ -25,7 +36,8 @@ EPSILON = 1e-8
 
 Pool.tau -= 1/365
 
-# #TEST SWAP AMOUNT IN RISKY
+# COMPARE ANALYTICAL TO FINITE DIFFERENCES MARGINAL PRICE 
+# CALCULATIONS
 if False: 
     x = np.linspace(0.0001, 0.3, 10)
     right, _ = Pool.virtualSwapAmountInRisky(x+EPSILON)
@@ -36,7 +48,6 @@ if False:
     print(finite_difference)
     print(analytical)
 
-# #TEST SWAP AMOUNT IN RISKLESS
 if False: 
     x = np.linspace(0.0001, 100, 10)
     # x = 0.000001
@@ -78,3 +89,39 @@ if False:
     print(effective_price_buy_risky)
     print(theoretical_price_sell)
     print(theoretical_price_buy)
+
+# CHECK THE EFFECT OF UPDATING K ON THE BUY AND SELL PRICES
+if True: 
+    #Annualized volatility
+    sigma = 0.50
+    #Initial time to expiry
+    initial_tau = 1
+    #Strike price
+    K = 1100
+    #Fee 
+    fee = 0
+    #Initial amount of the risky asset in the pool
+    initial_amount_risky = 0.5 
+    #Generate AMM pool
+    Pool = cfmm.CoveredCallAMM(initial_amount_risky, K, sigma, initial_tau, fee)
+    #The current reserves in the pool
+    riskless_reserves = Pool.reserves_riskless
+    EPSILON = 1e-8
+    Pool.tau -= 15/365
+    print("Before updating k after the update in tau")
+    print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
+    print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
+    print("After updating k after the update in tau")
+    Pool.invariant = Pool.reserves_riskless - getRisklessGivenRisky(Pool.reserves_risky, Pool.K, Pool.sigma, Pool.tau)
+    print("After updating k after the update in tau")
+    print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
+    print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
+    max_price = Pool.getMarginalPriceSwapRisklessIn(0)
+    m = 1.1*max_price
+    #Initialize arbitrager
+    Arbitrager = arb.Arbitrager()
+    Arbitrager.arbitrageExactly(m, Pool)
+    print("After an arbitrage with m > max_price")
+    print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
+    print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
+
