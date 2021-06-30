@@ -1,4 +1,5 @@
 from scipy.stats import norm
+import matplotlib.pyplot as plt
 
 import numpy as np
 import cfmm
@@ -91,7 +92,7 @@ if False:
     print(theoretical_price_buy)
 
 # CHECK THE EFFECT OF UPDATING K ON THE BUY AND SELL PRICES
-if True: 
+if False: 
     #Annualized volatility
     sigma = 0.50
     #Initial time to expiry
@@ -107,13 +108,19 @@ if True:
     #The current reserves in the pool
     riskless_reserves = Pool.reserves_riskless
     EPSILON = 1e-8
-    Pool.tau -= 15/365
-    print("Before updating k after the update in tau")
+    print("Before doing anything")
+    print("Invariant = ", Pool.invariant)
     print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
     print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
-    print("After updating k after the update in tau")
+    
+    Pool.tau -= 15/365
+    print("Before updating k after the update in tau")
+    print("Invariant = ", Pool.invariant)
+    print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
+    print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
     Pool.invariant = Pool.reserves_riskless - getRisklessGivenRisky(Pool.reserves_risky, Pool.K, Pool.sigma, Pool.tau)
     print("After updating k after the update in tau")
+    print("Invariant = ", Pool.invariant)
     print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
     print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
     max_price = Pool.getMarginalPriceSwapRisklessIn(0)
@@ -122,6 +129,46 @@ if True:
     Arbitrager = arb.Arbitrager()
     Arbitrager.arbitrageExactly(m, Pool)
     print("After an arbitrage with m > max_price")
+    print("Invariant = ", Pool.invariant)
     print("Max price: ", Pool.getMarginalPriceSwapRisklessIn(0))
     print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
 
+# NEGATIVE RESERVES OCCURRENCES TEST
+if True: 
+    # Annualized volatility
+    sigma = 0.50
+    # Initial time to expiry
+    initial_tau = 1
+    # Strike price
+    K = 1100
+    fee = 0
+    initial_amount_risky = 0.5 
+    # Initialize some arbitrary pool
+    Pool = cfmm.CoveredCallAMM(initial_amount_risky, K, sigma, initial_tau, fee)
+    # The parameters that cause an issue in the main routine
+    Pool.tau = 0.5192307692307692
+    Pool.invariant = -19.093097109440244
+    Pool.reserves_risky = 0.9516935976350682
+    Pool.reserves_riskless = 4.665850286101332
+
+    reserves_risky = np.linspace(0.8, 1, 1000)
+
+    # With zero invariant
+    Pool.invariant = 0
+    reserves_riskless = Pool.getRisklessGivenRisky(reserves_risky)
+    plt.plot(reserves_risky, reserves_riskless, label = "With invariant = 0")
+
+    # With "correct" invariant with respect to the original state of the pool
+    Pool.invariant = -19.093097109440244
+    reserves_riskless = Pool.getRisklessGivenRisky(reserves_risky)
+    plt.plot(reserves_risky, reserves_riskless, label = "With 'valid' invariant for the current tau")
+
+    plt.title("Negative invariant causing negative reserves \n" + r"$\sigma = {vol}$".format(vol=Pool.sigma) +" ; " + r"$K = {strike}$".format(strike=Pool.K) + " ; " +r"$\gamma = {gam}$".format(gam=1 - Pool.fee) +"\n" + r"$\tau = {tau}$".format(tau=Pool.tau) + "\n" + r"Initial $\tau = 1$")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.legend(loc='best')
+    plt.tight_layout()
+    plt.show()
+
+    # optimal_trade = 0.011221844928059747
+    # Pool.swapAmountInRisky(optimal_trade)
