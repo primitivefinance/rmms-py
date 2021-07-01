@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import cfmm
+from cfmm import blackScholesCoveredCallSpotPrice
 import matplotlib.pyplot as plt
 import arb
 
@@ -36,6 +37,55 @@ riskless_reserves = Pool.reserves_riskless
 EPSILON = 1e-8
 
 Pool.tau -= 1/365
+
+# print(blackScholesCoveredCallSpotPrice(0.5, 1100, 0.5, 1))
+# def BSPriceSimplified(x, K, sigma, tau):
+#     return (K*norm.pdf(norm.ppf(1 - x) - sigma*np.sqrt(tau)))/(norm.pdf(norm.ppf(1 - x)))
+
+# def furtherSimplified(x, K, sigma, tau):
+#     return (K/(2*np.pi))*np.exp(sigma*np.sqrt(tau)*norm.ppf())
+
+# print(BSPriceSimplified(0.5, 1100, 0.5, 1))
+
+# print(BSPriceSimplified(0.000000001, 1100, 0.5, 1))
+
+# TEST OF SPOT PRICE AT BOUNDARIES
+if False:
+    # Annualized volatility
+    sigma = 0.50
+    # Initial time to expiry
+    initial_tau = 1
+    # Strike price
+    K = 1100
+    fee = 0
+    initial_amount_risky = 0.5 
+    # Study the effect of kinks for small values of tau
+    taus = [120/365, 60/365, 30/365]
+    x = np.linspace(1e-15, 1-1e-15, 1000000) 
+    for tau in taus:
+        y = blackScholesCoveredCallSpotPrice(x, Pool.K, Pool.sigma, tau)
+        plt.plot(x, y, label=f"tau = {round(tau,2)}")
+    plt.title("Reported price behavior for different values of tau \n" + r"$\sigma = {vol}$".format(vol=Pool.sigma) +" ; " r"$K = {strike}$".format(strike=K) + " ; " +r"$\gamma = {gam}$".format(gam=1 - fee))
+    plt.xlabel("Risky reserves (ETH)")
+    plt.ylabel("Reported price (USD)")
+    plt.legend(loc='best')
+    plt.show(block = True)
+
+        
+    # Zoom in on kinks of the spot price curve
+    taus = [0.3, 0.1, 0.05]
+    for tau in taus: 
+        Pool.tau = tau
+        x_near_zero = np.linspace(1e-10, 1e-16, 1000000)
+        x_near_one = np.linspace(1-1e-10, 1-1e-16, 1000000)
+        s_near_zero = blackScholesCoveredCallSpotPrice(x_near_zero, Pool.K, Pool.sigma, Pool.tau)
+        s_near_one = blackScholesCoveredCallSpotPrice(x_near_one, Pool.K, Pool.sigma, Pool.tau)
+        plt.plot(x_near_zero, s_near_zero)
+        # plt.gca().invert_xaxis()
+        plt.show(block = False)
+        plt.figure()
+        plt.plot(x_near_one, s_near_one)
+        plt.show(block = True)  
 
 # COMPARE ANALYTICAL TO FINITE DIFFERENCES MARGINAL PRICE 
 # CALCULATIONS
@@ -92,7 +142,7 @@ if False:
     print(theoretical_price_buy)
 
 # CHECK THE EFFECT OF UPDATING K ON THE BUY AND SELL PRICES
-if False: 
+if True: 
     #Annualized volatility
     sigma = 0.50
     #Initial time to expiry
@@ -134,7 +184,7 @@ if False:
     print("Min price: ", Pool.getMarginalPriceSwapRiskyIn(0), "\n")
 
 # NEGATIVE RESERVES OCCURRENCES TEST
-if True: 
+if False: 
     # Annualized volatility
     sigma = 0.50
     # Initial time to expiry
