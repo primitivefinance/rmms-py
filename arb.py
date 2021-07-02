@@ -55,8 +55,11 @@ class Arbitrager():
             #Solve for the optimal amount in
             def func(amount_in):
                 return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
-            # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky > m")
-            optimal_trade = scipy.optimize.bisect(func, 0, (1 - R1 - EPSILON))
+            # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
+            if (np.sign(func(0)) != np.sign(func((1 - R1 - EPSILON)))):
+                optimal_trade = scipy.optimize.bisect(func, 0, (1 - R1 - EPSILON))
+            else:
+                optimal_trade = 1 - R1 - EPSILON
             # print("result = ", func(optimal_trade))
             print("Optimal trade: ", optimal_trade, " ETH in")
             amount_out, _ = Pool.virtualSwapAmountInRisky(optimal_trade)
@@ -72,8 +75,11 @@ class Arbitrager():
         elif price_buy_risky < m - 1e-8:
             def func(amount_in):
                 return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
-            # print("gamma = ", gamma, "risky = ", R1, "riskless = ", R2, "K = ", K, "invariant = ", k, "sigma = ", sigma, "tau = ", tau, "m = ", m, "price risky < m")
-            optimal_trade = scipy.optimize.bisect(func, 0, (K - R2 - EPSILON))
+            # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
+            if (np.sign(func(0)) != np.sign(func(K - R2 - EPSILON))):
+                optimal_trade = scipy.optimize.bisect(func, 0, (K - R2 - EPSILON))
+            else: 
+                optimal_trade = K- R2 - EPSILON
             # print("result = ", func(optimal_trade))
             print("Optimal trade: ", optimal_trade, " USD in")
             amount_out, _ = Pool.virtualSwapAmountInRiskless(optimal_trade)
