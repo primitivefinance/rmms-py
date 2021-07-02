@@ -19,10 +19,10 @@ config_object.read("config.ini")
 
 STRIKE_PRICE = float(config_object.get("Pool parameters", "STRIKE_PRICE"))
 TIME_TO_MATURITY = float(config_object.get("Pool parameters", "TIME_TO_MATURITY"))
-FEE = float(config_object.get("Pool parameters", "FEE"))/100
+FEE = float(config_object.get("Pool parameters", "FEE"))
 
 INITIAL_REFERENCE_PRICE = float(config_object.get("Price action parameters", "INITIAL_REFERENCE_PRICE"))
-ANNUALIZED_VOL = float(config_object.get("Price action parameters", "ANNUALIZED_VOL"))/100
+ANNUALIZED_VOL = float(config_object.get("Price action parameters", "ANNUALIZED_VOL"))
 DRIFT = float(config_object.get("Price action parameters", "DRIFT"))
 TIME_HORIZON = float(config_object.get("Price action parameters", "TIME_HORIZON"))
 TIME_STEPS_SIZE = float(config_object.get("Price action parameters", "TIME_STEPS_SIZE"))
@@ -73,6 +73,7 @@ sigma = ANNUALIZED_VOL
 initial_tau = TIME_TO_MATURITY
 K = STRIKE_PRICE
 fee = FEE
+gamma = 1 - FEE
 np.random.seed(SEED)
 
 #Stringify for plotting
@@ -126,9 +127,6 @@ theoretical_lp_value_array = []
 # Effective value of LP shares with fees
 effective_lp_value_array = []
 
-# Mean square error
-mse = []
-
 dtau = TAU_UPDATE_FREQUENCY
 
 for i in range(len(S)):
@@ -136,16 +134,27 @@ for i in range(len(S)):
     #     print("In progress... ", round(i/365), "%")
     #Update pool's time to maturity
     theoretical_tau = initial_tau - t[i]/365
+
+    print(f"___________________ \n \nStep {i}")
+    print("Invariant before updating tau =  ", Pool.invariant)
     
     if i % dtau == 0:
         # print("hey")
         Pool.tau = initial_tau - t[i]/365
+        print(f"New value of tau: {Pool.tau}")
         #Changing tau changes the value of the invariant even if no trade happens
         Pool.invariant = Pool.reserves_riskless - getRisklessGivenRisky(Pool.reserves_risky, Pool.K, Pool.sigma, Pool.tau)
+        print("Invariant after updating tau =  ", Pool.invariant)
+        spot_price_array.append(Pool.getSpotPrice())
+        # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
+        # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
+        max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
+        min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
+    
     # This is to avoid numerical errors that have been observed when getting 
     # closer to maturity. TODO: Figure out what causes these numerical errors.
 
-    if Pool.tau > 0.05:
+    if Pool.tau >= 0:
         #Perform arbitrage step
         Arbitrager.arbitrageExactly(S[i], Pool)
         #Get reserves given the reference price in the zero fees case
@@ -157,19 +166,12 @@ for i in range(len(S)):
         theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
         theoretical_lp_value_array.append(theoretical_lp_value)
         effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
-        spot_price_array.append(Pool.getSpotPrice())
-        # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
-        # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
-        max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
-        min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
         # max_marginal_price_array.append(max_marginal_price)
         # min_marginal_price_array.append(min_marginal_price)
-    if Pool.tau < 0.05: 
+    if Pool.tau < 0: 
         max_index = i
         break
     max_index = i
-
-mse.append(np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_array)).mean())
 
 # plt.plot(fees, mse, 'o')
 # plt.xlabel("Fee")
@@ -180,16 +182,34 @@ mse.append(np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_
 theoretical_lp_value_array = np.array(theoretical_lp_value_array)
 effective_lp_value_array = np.array(effective_lp_value_array)
 
+#Mean square error
+mse = np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_array)/theoretical_lp_value_array).mean()
+
+# Since we're adding the marginal prices to the array at the 
+# nex ste, after the tau and k update, in order to 
+#  to avoid representing diverging prices in the zero
+# fee case, we need to offset S so that the plot correctly shows
+# the marginal prices in the pool *after* arbitrage and 
+# *after* an update in tau and corresponding invariant when arbitrage 
+# occurs.
+S_offset = []
+
+for i in range(len(S)-1):
+    S_offset.append(S[i+1])
+
+# Note: as a result, we're plotting the price after arbitrage, and after the 
+# NEW update in tau, so the prices display actually differ. 
+
 if PLOT_PRICE_EVOL: 
-    plt.plot(t[0:max_index], S[0:max_index], label = "Reference price")
+    plt.plot(t[0:max_index], S_offset[0:max_index], label = "Reference price")
     # plt.plot(t[0:max_index], spot_price_array, label = "Pool spot price")
     plt.plot(t[0:max_index], min_marginal_price_array[0:max_index], label = "Price sell risky")
     plt.plot(t[0:max_index], max_marginal_price_array[0:max_index], label = "Price buy risky")
-    plt.title("Arbitrage between CFMM and reference price\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=sigma_str, strike=K_str, gam=gamma_str, dt=str(dtau)) + ", np.seed("+str(SEED)+")")
+    plt.title("Arbitrage between CFMM and reference price\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TAU_UPDATE_FREQUENCY)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Price (USD)")
     plt.legend(loc='best')
-    params_string = "sigma"+sigma_str+"_K"+K_str+"_gamma"+gamma_str+"_dtau"+str(dt)+"_seed"+str(SEED)
+    params_string = "sigma"+str(ANNUALIZED_VOL)+"_K"+str(STRIKE_PRICE)+"_gamma"+str(gamma)+"_dtau"+str(TAU_UPDATE_FREQUENCY)+"_seed"+str(SEED)
     filename = 'price_evol_'+params_string+'.svg'
     plt.plot()
     if SAVE_PRICE_EVOL:
@@ -200,28 +220,30 @@ if PLOT_PAYOFF_EVOL:
     plt.figure()
     plt.plot(t[0:max_index], theoretical_lp_value_array[0:max_index], label = "Theoretical LP value")
     plt.plot(t[0:max_index], effective_lp_value_array[0:max_index], label = "Effective LP value")
-    plt.title("Value of LP shares\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=sigma_str, strike=K_str, gam=gamma_str, dt=str(dtau))+" days"+ ", np.seed("+str(SEED)+")")
+    plt.title("Value of LP shares\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TAU_UPDATE_FREQUENCY)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Value (USD)")
     plt.legend(loc='best')
-    params_string = "sigma"+sigma_str+"_K"+K_str+"_gamma"+gamma_str+"_dtau"+str(dt)+"_seed"+str(SEED)
+    params_string = "sigma"+str(ANNUALIZED_VOL)+"_K"+str(STRIKE_PRICE)+"_gamma"+str(gamma)+"_dtau"+str(TAU_UPDATE_FREQUENCY)+"_seed"+str(SEED)
     filename = 'lp_value_'+params_string+'.svg'
     plt.plot()
     if SAVE_PAYOFF_EVOL:
         plt.savefig('sim_results/'+filename)
     plt.show(block = True)
 
-#     plt.figure()
-#     plt.plot(t[0:max_index], 100*abs(theoretical_lp_value_array-effective_lp_value_array)/theoretical_lp_value_array, label="Seed = "+str(s))
 
 if PLOT_PAYOFF_DRIFT:
-    plt.title("Drift of LP shares value vs. theoretical \n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=sigma_str, strike=K_str, gam=gamma_str, dt=str(dtau))+" days")
+    plt.figure()
+    plt.plot(t[0:max_index], 100*abs(theoretical_lp_value_array[max_index]-effective_lp_value_array[max_index])/theoretical_lp_value_array, label=f"Seed = {SEED}")
+    plt.title("Drift of LP shares value vs. theoretical \n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TAU_UPDATE_FREQUENCY)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Drift (%)")
     plt.legend(loc='best')
-    params_string = "sigma"+sigma_str+"_K"+K_str+"_gamma"+gamma_str+"_dtau"+str(dt)
+    params_string = "sigma"+str(ANNUALIZED_VOL)+"_K"+str(STRIKE_PRICE)+"_gamma"+str(gamma)+"_dtau"+str(TAU_UPDATE_FREQUENCY)+"_seed"+str(SEED)
     filename = 'drift_seed_comparison'+params_string+'.svg'
     plt.plot()
     if SAVE_PAYOFF_DRIFT:
         plt.savefig('sim_results/'+filename)
     plt.show()
+
+print("MSE = ", mse)
