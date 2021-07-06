@@ -79,6 +79,9 @@ class CoveredCallAMM():
     def getRisklessGivenRisky(self, risky): 
         return self.invariant + self.K*norm.cdf(norm.ppf(1 - risky) - self.sigma*np.sqrt(self.tau))
 
+    def getRisklessGivenRiskyNoInvariant(self, risky):
+        return self.K*norm.cdf(norm.ppf(1 - risky) - self.sigma*np.sqrt(self.tau))
+
     def getRiskyGivenRiskless(self, riskless):
         return 1 - norm.cdf(norm.ppf((riskless - self.invariant)/self.K) + self.sigma*np.sqrt(self.tau))
 
@@ -99,7 +102,8 @@ class CoveredCallAMM():
         self.reserves_riskless -= amount_out
         assert nonnegative(new_reserves_riskless)
         #Update invariant
-        self.invariant = self.reserves_riskless - self.getRisklessGivenRisky(self.reserves_risky) 
+        self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky) 
+        print('post invariant: ', self.invariant)
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
@@ -138,6 +142,7 @@ class CoveredCallAMM():
         self.reserves_risky -= amount_out
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRisky(self.reserves_risky)
+        print("---------------------invariant here: ", self.invariant)
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 
