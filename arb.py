@@ -7,6 +7,8 @@ import numpy as np
 from scipy.stats import norm
 from scipy import optimize
 
+EPSILON = 1e-12
+
 def quantilePrime(x):
     return norm.pdf(norm.ppf(x))**-1
 
@@ -55,8 +57,8 @@ class Arbitrager():
                 return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
             # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
             print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
-            if (np.sign(func(0)) != np.sign(func((1 - R1)))):
-                optimal_trade = scipy.optimize.bisect(func, 0, (1 - R1))
+            if (np.sign(func(EPSILON)) != np.sign(func((1 - R1)-EPSILON))):
+                optimal_trade = scipy.optimize.bisect(func, EPSILON, (1 - R1) - EPSILON)
             else:
                 optimal_trade = 1 - R1
             # print("result = ", func(optimal_trade))
@@ -76,8 +78,8 @@ class Arbitrager():
                 return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
             # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
             print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
-            if (np.sign(func(0)) != np.sign(func(K - R2))):
-                optimal_trade = scipy.optimize.bisect(func, 0, (K - R2))
+            if (np.sign(func(EPSILON)) != np.sign(func(K - R2-EPSILON))):
+                optimal_trade = scipy.optimize.bisect(func, EPSILON, (K - R2) - EPSILON)
             else: 
                 optimal_trade = K- R2
                 
