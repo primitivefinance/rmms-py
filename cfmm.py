@@ -72,7 +72,7 @@ class CoveredCallAMM():
         # #Find solution that satisfies the invariant equation Phi(x,y) = 0
         # y = scipy.optimize.root(function, initial_x, method='lm')
         # self.reserves_riskless = y.x[0]
-        self.reserves_riskless = self.K*norm.cdf(norm.ppf(1-initial_x) - self.sigma*self.tau)
+        self.reserves_riskless = self.K*norm.cdf(norm.ppf(1-initial_x) - self.sigma*np.sqrt(self.tau))
         self.fee = fee
         self.accured_fees = [0,0]
 
@@ -141,7 +141,7 @@ class CoveredCallAMM():
         self.reserves_riskless += amount_in
         self.reserves_risky -= amount_out
         #Update invariant
-        self.invariant = self.reserves_riskless - self.getRisklessGivenRisky(self.reserves_risky)
+        self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky)
         print("---------------------invariant here: ", self.invariant)
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
