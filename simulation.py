@@ -143,13 +143,11 @@ for i in range(len(S)):
         Pool.tau = initial_tau - t[i]/365
         print(f"New value of tau: {Pool.tau}")
         #Changing tau changes the value of the invariant even if no trade happens
-        Pool.invariant = Pool.reserves_riskless - getRisklessGivenRisky(Pool.reserves_risky, Pool.K, Pool.sigma, Pool.tau)
+        Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
         print("Invariant after updating tau =  ", Pool.invariant)
         spot_price_array.append(Pool.getSpotPrice())
         # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
         # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
-        max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
-        min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
     
     # This is to avoid numerical errors that have been observed when getting 
     # closer to maturity. TODO: Figure out what causes these numerical errors.
@@ -157,6 +155,8 @@ for i in range(len(S)):
     if Pool.tau >= 0:
         #Perform arbitrage step
         Arbitrager.arbitrageExactly(S[i], Pool)
+        max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
+        min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
         #Get reserves given the reference price in the zero fees case
         theoretical_reserves_risky = getRiskyReservesGivenSpotPrice(S[i], Pool.K, Pool.sigma, theoretical_tau)
         theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, Pool.K, Pool.sigma, theoretical_tau)
@@ -201,7 +201,7 @@ for i in range(len(S)-1):
 # NEW update in tau, so the prices display actually differ. 
 
 if PLOT_PRICE_EVOL: 
-    plt.plot(t[0:max_index], S_offset[0:max_index], label = "Reference price")
+    plt.plot(t[0:max_index], S[0:max_index], label = "Reference price")
     # plt.plot(t[0:max_index], spot_price_array, label = "Pool spot price")
     plt.plot(t[0:max_index], min_marginal_price_array[0:max_index], label = "Price sell risky")
     plt.plot(t[0:max_index], max_marginal_price_array[0:max_index], label = "Price buy risky")
