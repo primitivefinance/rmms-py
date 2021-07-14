@@ -205,11 +205,11 @@ if PLOT_PRICE_EVOL:
     # plt.plot(t[0:max_index], spot_price_array, label = "Pool spot price")
     plt.plot(t[0:max_index], min_marginal_price_array[0:max_index], label = "Price sell risky")
     plt.plot(t[0:max_index], max_marginal_price_array[0:max_index], label = "Price buy risky")
-    plt.title("Arbitrage between CFMM and reference price\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TAU_UPDATE_FREQUENCY)+" days"+ ", np.seed("+str(SEED)+")")
+    plt.title("Arbitrage between CFMM and reference price\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TIME_STEPS_SIZE)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Price (USD)")
     plt.legend(loc='best')
-    params_string = "sigma"+str(ANNUALIZED_VOL)+"_K"+str(STRIKE_PRICE)+"_gamma"+str(gamma)+"_dtau"+str(TAU_UPDATE_FREQUENCY)+"_seed"+str(SEED)
+    params_string = "sigma"+str(ANNUALIZED_VOL)+"_K"+str(STRIKE_PRICE)+"_gamma"+str(gamma)+"_dtau"+str(TIME_STEPS_SIZE)+"_seed"+str(SEED)
     filename = 'price_evol_'+params_string+'.svg'
     plt.plot()
     if SAVE_PRICE_EVOL:
@@ -220,7 +220,7 @@ if PLOT_PAYOFF_EVOL:
     plt.figure()
     plt.plot(t[0:max_index], theoretical_lp_value_array[0:max_index], label = "Theoretical LP value")
     plt.plot(t[0:max_index], effective_lp_value_array[0:max_index], label = "Effective LP value")
-    plt.title("Value of LP shares\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TAU_UPDATE_FREQUENCY)+" days"+ ", np.seed("+str(SEED)+")")
+    plt.title("Value of LP shares\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TIME_STEPS_SIZE)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Value (USD)")
     plt.legend(loc='best')
@@ -235,7 +235,7 @@ if PLOT_PAYOFF_EVOL:
 if PLOT_PAYOFF_DRIFT:
     plt.figure()
     plt.plot(t[0:max_index], 100*abs(theoretical_lp_value_array[max_index]-effective_lp_value_array[max_index])/theoretical_lp_value_array, label=f"Seed = {SEED}")
-    plt.title("Drift of LP shares value vs. theoretical \n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TAU_UPDATE_FREQUENCY)+" days"+ ", np.seed("+str(SEED)+")")
+    plt.title("Drift of LP shares value vs. theoretical \n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TIME_STEPS_SIZE)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Drift (%)")
     plt.legend(loc='best')
@@ -247,3 +247,4 @@ if PLOT_PAYOFF_DRIFT:
     plt.show()
 
 print("MSE = ", mse)
+print("final price = ", effective_lp_value_array[-1])
