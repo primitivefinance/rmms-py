@@ -111,8 +111,8 @@ if IS_CONSTANT_PRICE:
         constant_price.append(S0)
     S = constant_price
 
-plt.plot(t, S)
-plt.show()
+# plt.plot(t, S)
+# plt.show()
 
 # Prepare storage variables
 
@@ -247,4 +247,4 @@ if PLOT_PAYOFF_DRIFT:
     plt.show()
 
 print("MSE = ", mse)
-print("final price = ", effective_lp_value_array[-1])
+print("final divergence = ", 100*abs(theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/theoretical_lp_value_array[-1], "%")
