@@ -142,7 +142,7 @@ if False:
     print(theoretical_price_buy)
 
 # CHECK THE EFFECT OF UPDATING K ON THE BUY AND SELL PRICES
-if True: 
+if False: 
     #Annualized volatility
     sigma = 0.50
     #Initial time to expiry
@@ -150,7 +150,7 @@ if True:
     #Strike price
     K = 1100
     #Fee 
-    fee = 0
+    fee = 0.05
     #Initial amount of the risky asset in the pool
     initial_amount_risky = 0.5 
     #Generate AMM pool
@@ -222,3 +222,16 @@ if False:
 
     # optimal_trade = 0.011221844928059747
     # Pool.swapAmountInRisky(optimal_trade)
+
+#INVARIANT CHANGE TEST
+
+if True: 
+    K = 2100
+    initial_tau = 0.165
+    sigma = 1.5
+    fee = 0
+    Pool = cfmm.CoveredCallAMM(0.5, K, sigma, initial_tau, fee)
+    print("Invariant before = ", Pool.invariant)
+    new_invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
+    print("Invariant after = ", Pool.invariant)
+
