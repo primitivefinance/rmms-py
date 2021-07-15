@@ -225,7 +225,7 @@ if False:
 
 #INVARIANT CHANGE TEST
 
-if True: 
+if False: 
     K = 2100
     initial_tau = 0.165
     sigma = 1.5
@@ -235,3 +235,53 @@ if True:
     new_invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
     print("Invariant after = ", Pool.invariant)
 
+if True: 
+
+    # The goal is to produce a sensible GBM over a 30 days time windows with an annualized volatility of 150%
+    # and some arbitrary drift. Try to change the drift, the unit of volatility etc in such a way that it 
+    # produces something that makes sense.
+
+    import time_series
+
+    # Example 1: converted annualized vol to timestep vol, high drift  
+    # NOTE: the price is shooting up, completely unrealistic
+    initial_price = 1100
+    annualized_vol = 1.5
+    drift = 0.04
+    # Total duration of the GBM in days
+    time_horizon = 30
+    # Time steps size in days
+    time_steps_size = 0.00023148148 #20 minutes
+    # Number of time steps in a year
+    N_timesteps = 365/time_steps_size
+    # Scaled down volatility from annualized volatility
+    sigma_timesteps = annualized_vol/np.sqrt(N_timesteps)
+    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 1")
+    plt.show()
+
+    # Example 2: converted annualized vol to vol, low drift
+    # NOTE: the price might as well stay constant, completely unrealistic
+    drift = 0.0004
+    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 2")
+    plt.show()
+
+    # Example 3: converted annualized vol to timestep vol, drift somewhere in the middle
+    #NOTE: completely unrealistic, just going up regularly
+    drift = 0.004
+    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 3")
+    plt.show()
+
+    #Example 4: unconverted volatility just in case even though it doesn't make sense, large drift. Lower drift will make it converge to 0 after a couple of days, large drift will make it reach absurdly high values of the order of 1e35
+    drift = 1.1
+    t, S = time_series.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 4")
+    plt.show()
+
+    
