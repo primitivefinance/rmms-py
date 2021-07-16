@@ -251,7 +251,7 @@ if True:
     # Total duration of the GBM in days
     time_horizon = 30
     # Time steps size in days
-    time_steps_size = 0.00023148148 #20 minutes
+    time_steps_size = 0.0138889 #20 minutes
     # Number of time steps in a year
     N_timesteps = 365/time_steps_size
     # Scaled down volatility from annualized volatility
