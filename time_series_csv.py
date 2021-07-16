@@ -2,9 +2,12 @@
 Generate sample price actions following a given process
 '''
 
+from configparser import ConfigParser
 import matplotlib.pyplot as plt
 import numpy as np
-import csv
+import json, codecs
+
+import math
 
 def generateGBM(T, mu, sigma, S0, dt):
     '''
@@ -29,6 +32,10 @@ def generateGBM(T, mu, sigma, S0, dt):
     W = np.cumsum(W)*np.sqrt(dt) ### standard brownian motion ###
     X = (mu-0.5*sigma**2)*t + sigma*W 
     S = S0*np.exp(X) ### geometric brownian motion ###
+    S = S.tolist()
+    t = t.tolist()
+    json.dump(S, codecs.open('./dump.json', 'w', encoding='utf-8'), indent=4) 
+    json.dump(t, codecs.open('./timestep_dump.json', 'w', encoding='utf-8'), indent=4) 
     return t, S
 
 # T = 365

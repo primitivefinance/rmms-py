@@ -3,11 +3,14 @@ from configparser import ConfigParser
 import cfmm
 import arb
 import time_series
+import time_series_csv
 
 import matplotlib.pyplot as plt 
 import numpy as np
 import scipy
+import sys
 from scipy.stats import norm
+import json
 
 import math
 
@@ -102,7 +105,19 @@ N_year = 365/dt
 
 sigma_timestep = sigma/np.sqrt(N_year)
 
-t, S = time_series.generateGBM(T, mu, sigma_timestep, S0, dt)
+if sys.argv[1] == 'gen':
+    t, S = time_series_csv.generateGBM(T, mu, sigma_timestep, S0, dt)
+    sys.exit()
+
+dump = open(sys.argv[1])
+timestep_dump = open(sys.argv[2])
+ts_dump = open(sys.argv[3])
+
+S = json.load(dump)
+t = json.load(timestep_dump)
+ts_dump = json.load(ts_dump)
+print(len(ts_dump['0.003']['theoreticalLp']))
+
 
 if IS_CONSTANT_PRICE:
     length = len(S)
@@ -126,6 +141,8 @@ max_marginal_price_array = []
 theoretical_lp_value_array = []
 # Effective value of LP shares with fees
 effective_lp_value_array = []
+theretical_lp_value_ts = ts_dump['0.003']['theoreticalLp']
+effective_lp_value_ts = ts_dump['0.003']['effectiveLp']
 
 dtau = TAU_UPDATE_FREQUENCY
 
@@ -218,8 +235,10 @@ if PLOT_PRICE_EVOL:
 
 if PLOT_PAYOFF_EVOL:
     plt.figure()
-    plt.plot(t[0:max_index], theoretical_lp_value_array[0:max_index], label = "Theoretical LP value")
+    #plt.plot(t[0:max_index], theoretical_lp_value_array[0:max_index], label = "Theoretical LP value")
     plt.plot(t[0:max_index], effective_lp_value_array[0:max_index], label = "Effective LP value")
+    plt.plot(t[0:], effective_lp_value_ts[0:], label = "Effective LP value TS")
+    plt.plot(t[0:], theoretical_lp_value_array[0:], label = "Theoretical LP value TS")
     plt.title("Value of LP shares\n" + r"$\sigma = {vol}$, $K = {strike}$, $\gamma = {gam}$, $d\tau = {dt}$".format(vol=ANNUALIZED_VOL, strike=STRIKE_PRICE, gam=1-FEE, dt=TIME_STEPS_SIZE)+" days"+ ", np.seed("+str(SEED)+")")
     plt.xlabel("Time steps (days)")
     plt.ylabel("Value (USD)")
