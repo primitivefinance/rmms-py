@@ -116,7 +116,7 @@ ts_dump = open(sys.argv[3])
 S = json.load(dump)
 t = json.load(timestep_dump)
 ts_dump = json.load(ts_dump)
-print(len(ts_dump['0.003']['theoreticalLp']))
+print(len(ts_dump['theoreticalLp']))
 
 
 if IS_CONSTANT_PRICE:
@@ -141,8 +141,8 @@ max_marginal_price_array = []
 theoretical_lp_value_array = []
 # Effective value of LP shares with fees
 effective_lp_value_array = []
-theretical_lp_value_ts = ts_dump['0.003']['theoreticalLp']
-effective_lp_value_ts = ts_dump['0.003']['effectiveLp']
+theretical_lp_value_ts = ts_dump['theoreticalLp']
+effective_lp_value_ts = ts_dump['effectiveLp']
 
 dtau = TAU_UPDATE_FREQUENCY
 
