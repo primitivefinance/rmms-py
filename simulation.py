@@ -87,7 +87,6 @@ Arbitrager = arb.Arbitrager()
 
 #Initialize GBM parameters
 T = TIME_HORIZON
-mu = DRIFT
 dt = TIME_STEPS_SIZE
 S0 = INITIAL_REFERENCE_PRICE
 # Number of timesteps of the sized used in the simulation
@@ -101,6 +100,7 @@ N_year = 365/dt
 # etc.
 
 sigma_timestep = sigma/np.sqrt(N_year)
+mu = DRIFT/np.sqrt(N_year)
 
 t, S = time_series.generateGBM(T, mu, sigma_timestep, S0, dt)
 
