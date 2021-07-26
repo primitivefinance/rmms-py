@@ -247,7 +247,7 @@ if True:
     # NOTE: the price is shooting up, completely unrealistic
     initial_price = 1100
     annualized_vol = 1.5
-    drift = 0.04
+    drift = 0.00434077479319
     # Total duration of the GBM in days
     time_horizon = 30
     # Time steps size in days
@@ -261,27 +261,45 @@ if True:
     plt.title("Example 1")
     plt.show()
 
-    # Example 2: converted annualized vol to vol, low drift
-    # NOTE: the price might as well stay constant, completely unrealistic
-    drift = 0.0004
-    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
-    plt.plot(t, S)
-    plt.title("Example 2")
-    plt.show()
+    # # Example 2: converted annualized vol to vol, low drift
+    # # NOTE: the price might as well stay constant, completely unrealistic
+    # drift = 0.0004
+    # t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    # plt.plot(t, S)
+    # plt.title("Example 2")
+    # plt.show()
 
-    # Example 3: converted annualized vol to timestep vol, drift somewhere in the middle
-    #NOTE: completely unrealistic, just going up regularly
-    drift = 0.004
-    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
-    plt.plot(t, S)
-    plt.title("Example 3")
-    plt.show()
+    # # Example 3: converted annualized vol to timestep vol, drift somewhere in the middle
+    # #NOTE: completely unrealistic, just going up regularly
+    # drift = 0.004
+    # t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    # plt.plot(t, S)
+    # plt.title("Example 3")
+    # plt.show()
 
     #Example 4: unconverted volatility just in case even though it doesn't make sense, large drift. Lower drift will make it converge to 0 after a couple of days, large drift will make it reach absurdly high values of the order of 1e35
-    drift = 1.1
-    t, S = time_series.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
-    plt.plot(t, S)
-    plt.title("Example 4")
-    plt.show()
+    # drift = 0.1
+    # t, S = time_series.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
+    # plt.plot(t, S)
+    # plt.title("Example 4")
+    # plt.show()
 
-    
+# means = []
+# variances = []
+# for i in range(10000):
+#     N = 365
+#     sigma = 0.5/np.sqrt(365)
+#     dt = 1
+#     mu = 0.01
+#     S0 = 1000
+#     t = np.linspace(0, 365, N)
+#     W = np.random.standard_normal(size = N) 
+#     W = np.cumsum(W)*np.sqrt(dt) ### standard brownian motion ###
+#     X = (mu-0.5*sigma**2)*t + sigma*W 
+#     S = S0*np.exp(X) ### geometric brownian motion ###
+#     means.append(S[-1])
+#     variances.append(S[-1])
+# print(S0*np.exp(mu*365))
+# print(S0**2*np.exp(2*mu*365)
+# print(np.mean(means))
+# print(np.std(variances))
