@@ -1,8 +1,16 @@
+'''
+Run an individual simulation from the config.ini parameters 
+and display and/or record the results.
+'''
+
 from configparser import ConfigParser
 
 import cfmm
-import arb
 import time_series
+from utils import getRiskyReservesGivenSpotPrice
+from utils import getRisklessGivenRisky
+from arb import arbitrageExactly
+from simulate import simulate
 
 import matplotlib.pyplot as plt 
 import numpy as np
@@ -39,35 +47,6 @@ SAVE_PRICE_EVOL = config_object.getboolean("Simulation parameters", "SAVE_PRICE_
 SAVE_PAYOFF_EVOL = config_object.getboolean("Simulation parameters", "SAVE_PAYOFF_EVOL")
 SAVE_PAYOFF_DRIFT = config_object.getboolean("Simulation parameters", "SAVE_PAYOFF_DRIFT")
 
-# Functions for analytic zero fees spot price and reserves calculations
-def getRiskyReservesGivenSpotPrice(S, K, sigma, tau):
-    '''
-    Given some spot price S, get the risky reserves corresponding to that spot price by solving 
-    S = -y' = -f'(x) for x. Only useful in the no-fee case.
-    '''
-    def func(x):
-        return S - cfmm.blackScholesCoveredCallSpotPrice(x, K, sigma, tau)
-    if S > K:
-        sol, r = scipy.optimize.newton(func, 0.01, maxiter=250, disp=False, full_output=True)
-    else: 
-        sol, r = scipy.optimize.newton(func, 0.5, maxiter=250, disp=False, full_output=True)
-    reserves_risky = r.root
-    #The reserves almost don't change anymore at the boundaries, so if we haven't 
-    # converged, we return what we logically know to be very close to the actual 
-    # reserves.
-    if math.isnan(reserves_risky) and S > K:
-        return 0
-    elif math.isnan(reserves_risky) and S < K:
-        return 1
-    return reserves_risky
-
-def getRisklessGivenRisky(risky, K, sigma, tau): 
-    if risky == 0:
-        return K
-    elif risky == 1:
-        return 0
-    return K*norm.cdf(norm.ppf(1 - risky) - sigma*np.sqrt(tau))
-
 #Initialize pool parameters
 sigma = ANNUALIZED_VOL
 initial_tau = TIME_TO_MATURITY
@@ -83,7 +62,6 @@ K_str = str(K)
 
 #Initialize pool and arbitrager objects
 Pool = cfmm.CoveredCallAMM(0.5, K, sigma, initial_tau, fee)
-Arbitrager = arb.Arbitrager()
 
 #Initialize GBM parameters
 T = TIME_HORIZON
@@ -154,15 +132,12 @@ for i in range(len(S)):
 
     if Pool.tau >= 0:
         #Perform arbitrage step
-        Arbitrager.arbitrageExactly(S[i], Pool)
+        arbitrageExactly(S[i], Pool)
         max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
         min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
         #Get reserves given the reference price in the zero fees case
         theoretical_reserves_risky = getRiskyReservesGivenSpotPrice(S[i], Pool.K, Pool.sigma, theoretical_tau)
         theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, Pool.K, Pool.sigma, theoretical_tau)
-        if S[i] > 2300 and S[i] < 2350:
-            print(theoretical_reserves_risky)
-            print(theoretical_reserves_riskless)
         theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
         theoretical_lp_value_array.append(theoretical_lp_value)
         effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
@@ -247,4 +222,4 @@ if PLOT_PAYOFF_DRIFT:
     plt.show()
 
 print("MSE = ", mse)
-print("final divergence = ", 100*abs(theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/theoretical_lp_value_array[-1], "%")
+# print("final divergence = ", 100*abs(theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/theoretical_lp_value_array[-1], "%")

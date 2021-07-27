@@ -10,35 +10,9 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 import numpy as np
 
+from utils import nonnegative, quantilePrime, blackScholesCoveredCallSpotPrice
+
 EPSILON = 1e-10
-
-def nonnegative(x):
-    if isinstance(x, np.ndarray):
-        return (x >= 0).all()
-    return x >= 0
-
-def blackScholesCoveredCall(x, K, sigma, tau):
-    '''
-    Return value of the BS covered call trading function for given reserves and parameters.
-    '''
-    result = x[1] - K*norm.cdf(norm.ppf(1 - x[0]) - sigma*np.sqrt(tau))
-    return result
-
-# #For analytic spot price formula
-
-def quantilePrime(x):
-    '''
-    Analytical formula for the derivative of the quantile function (inverse of
-    the CDF).
-    '''
-    return norm.pdf(norm.ppf(x))**-1
-
-def blackScholesCoveredCallSpotPrice(x, K, sigma, tau):
-    '''
-    Analytical formula for the spot price (reported price) of the BS covered
-    call CFMM in the zero fees case.
-    '''
-    return K*norm.pdf(norm.ppf(1 - x) - sigma*np.sqrt(tau))*quantilePrime(1-x)
 
 class CoveredCallAMM():
     '''
@@ -67,6 +41,7 @@ class CoveredCallAMM():
         self.K = K
         self.sigma = sigma 
         self.tau = tau
+        self.initial_tau = tau
         self.invariant = 0
         # function = lambda y : blackScholesCoveredCall([initial_x, y], self.K, self.sigma, self.tau)
         # #Find solution that satisfies the invariant equation Phi(x,y) = 0
