@@ -1,9 +1,13 @@
+from time_series import generateGBM
+from simulate import simulate
+from optimize_fee import findOptimalFee
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 import numpy as np
 import cfmm
-from cfmm import blackScholesCoveredCallSpotPrice
+from utils import blackScholesCoveredCallSpotPrice
+from cfmm import CoveredCallAMM
 import matplotlib.pyplot as plt
 import arb
 
@@ -224,7 +228,6 @@ if False:
     # Pool.swapAmountInRisky(optimal_trade)
 
 #INVARIANT CHANGE TEST
-
 if False: 
     K = 2100
     initial_tau = 0.165
@@ -235,7 +238,8 @@ if False:
     new_invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
     print("Invariant after = ", Pool.invariant)
 
-if True: 
+#GBM generation tests
+if False: 
 
     # The goal is to produce a sensible GBM over a 30 days time windows with an annualized volatility of 150%
     # and some arbitrary drift. Try to change the drift, the unit of volatility etc in such a way that it 
@@ -263,43 +267,45 @@ if True:
 
     # # Example 2: converted annualized vol to vol, low drift
     # # NOTE: the price might as well stay constant, completely unrealistic
-    # drift = 0.0004
-    # t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
-    # plt.plot(t, S)
-    # plt.title("Example 2")
-    # plt.show()
+    drift = 0.0004
+    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 2")
+    plt.show()
 
     # # Example 3: converted annualized vol to timestep vol, drift somewhere in the middle
     # #NOTE: completely unrealistic, just going up regularly
-    # drift = 0.004
-    # t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
-    # plt.plot(t, S)
-    # plt.title("Example 3")
-    # plt.show()
+    drift = 0.004
+    t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 3")
+    plt.show()
 
-    #Example 4: unconverted volatility just in case even though it doesn't make sense, large drift. Lower drift will make it converge to 0 after a couple of days, large drift will make it reach absurdly high values of the order of 1e35
-    # drift = 0.1
-    # t, S = time_series.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
-    # plt.plot(t, S)
-    # plt.title("Example 4")
-    # plt.show()
+    #Example 4: everything expressed in years, WORKING
+    time_horizon = 1
+    drift = 1
+    time_steps_size = 0.0027397260274
+    t, S = time_series.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
+    plt.plot(t, S)
+    plt.title("Example 4")
+    plt.show()
 
-# means = []
-# variances = []
-# for i in range(10000):
-#     N = 365
-#     sigma = 0.5/np.sqrt(365)
-#     dt = 1
-#     mu = 0.01
-#     S0 = 1000
-#     t = np.linspace(0, 365, N)
-#     W = np.random.standard_normal(size = N) 
-#     W = np.cumsum(W)*np.sqrt(dt) ### standard brownian motion ###
-#     X = (mu-0.5*sigma**2)*t + sigma*W 
-#     S = S0*np.exp(X) ### geometric brownian motion ###
-#     means.append(S[-1])
-#     variances.append(S[-1])
-# print(S0*np.exp(mu*365))
-# print(S0**2*np.exp(2*mu*365)
-# print(np.mean(means))
-# print(np.std(variances))
+#Fee optimization tests
+if True: 
+    fee = 0.01
+    strike = 2000
+    initial_price = 0.8*2000
+    volatility = 0.5
+    drift = 0.5
+    time_steps_size = 0.0027397260274
+    time_horizon = 1
+    initial_tau = 1
+    # Pool = CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
+    # t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+    # from simulate import simulate
+    # mse, terminal_square_error = simulate(Pool, t, gbm)
+    from optimize_fee import returnErrors, findOptimalFee
+    mse, terminal_deviation = returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
+
+
+
