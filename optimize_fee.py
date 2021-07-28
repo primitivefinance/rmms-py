@@ -13,6 +13,7 @@ def returnErrors(fee, initial_tau, timestep_size, time_horizon, volatility, drif
     Given some parameters and a gbm, return the errors under 
     optimal arbitrage for that gbm
     '''
+    np.random.seed()
     t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, timestep_size)
     Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
     _, _, mse, terminal_square_error = simulate(Pool, t, gbm)
