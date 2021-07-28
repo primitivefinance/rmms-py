@@ -39,7 +39,7 @@ def findOptimalFee(initial_tau, timestep_size, time_horizon, volatility, drift, 
         '''
         mse_array = []
         square_terminal_error_array = []
-        for i in range(100):
+        for i in range(50):
             mse, square_terminal_error = returnErrors(fee, tau0, dtau, T, sigma, mu, K, p0)
             mse_array.append(mse)
             square_terminal_error_array.append(square_terminal_error)
@@ -47,6 +47,6 @@ def findOptimalFee(initial_tau, timestep_size, time_horizon, volatility, drift, 
         average_square_terminal_error = np.mean(square_terminal_error_array)
         return max(average_mse, average_square_terminal_error)
 
-    sol = minimize_scalar(maxErrorFromFee, bounds=(0, 0.15), method='Brent')
+    sol = minimize_scalar(maxErrorFromFee, bounds=(0, 0.05), method='Brent')
     optimal_fee = sol.x
     return optimal_fee
