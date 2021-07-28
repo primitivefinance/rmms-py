@@ -108,7 +108,7 @@ for i in range(len(S)):
     if i % dtau == 0:
         # print("hey")
         Pool.tau = initial_tau - t[i]
-        print(f"New value of tau: {Pool.tau}")
+        print("New tau = ", Pool.tau)
         #Changing tau changes the value of the invariant even if no trade happens
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
         print("Invariant after updating tau =  ", Pool.invariant)
@@ -148,21 +148,6 @@ effective_lp_value_array = np.array(effective_lp_value_array)
 
 #Mean square error
 mse = np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_array)/theoretical_lp_value_array).mean()
-
-# Since we're adding the marginal prices to the array at the 
-# nex ste, after the tau and k update, in order to 
-#  to avoid representing diverging prices in the zero
-# fee case, we need to offset S so that the plot correctly shows
-# the marginal prices in the pool *after* arbitrage and 
-# *after* an update in tau and corresponding invariant when arbitrage 
-# occurs.
-S_offset = []
-
-for i in range(len(S)-1):
-    S_offset.append(S[i+1])
-
-# Note: as a result, we're plotting the price after arbitrage, and after the 
-# NEW update in tau, so the prices display actually differ. 
 
 if PLOT_PRICE_EVOL: 
     plt.plot(t[0:max_index], S[0:max_index], label = "Reference price")
