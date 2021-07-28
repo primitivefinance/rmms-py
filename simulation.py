@@ -67,20 +67,9 @@ Pool = cfmm.CoveredCallAMM(0.5, K, sigma, initial_tau, fee)
 T = TIME_HORIZON
 dt = TIME_STEPS_SIZE
 S0 = INITIAL_REFERENCE_PRICE
-# Number of timesteps of the sized used in the simulation
-# that there would be in a year.
-N_year = 365/dt
-# Timestep vol from annualized vol. Example: if each timestep
-# represents a day, we need to convert annualized vol to daily 
-# vol, which is done by dividing the annualized vol by 
-# sqrt(number of days in a year). If every time step is an hour,
-# we do the same but dividing by sqrt(number of hours in a year), 
-# etc.
 
-sigma_timestep = sigma/np.sqrt(N_year)
-mu = DRIFT/np.sqrt(N_year)
 
-t, S = time_series.generateGBM(T, mu, sigma_timestep, S0, dt)
+t, S = time_series.generateGBM(T, DRIFT, ANNUALIZED_VOL, S0, dt)
 
 if IS_CONSTANT_PRICE:
     length = len(S)
@@ -89,8 +78,8 @@ if IS_CONSTANT_PRICE:
         constant_price.append(S0)
     S = constant_price
 
-# plt.plot(t, S)
-# plt.show()
+plt.plot(t, S)
+plt.show()
 
 # Prepare storage variables
 
@@ -111,14 +100,14 @@ for i in range(len(S)):
     # if i % 36 == 0: 
     #     print("In progress... ", round(i/365), "%")
     #Update pool's time to maturity
-    theoretical_tau = initial_tau - t[i]/365
+    theoretical_tau = initial_tau - t[i]
 
     print(f"___________________ \n \nStep {i}")
     print("Invariant before updating tau =  ", Pool.invariant)
     
     if i % dtau == 0:
         # print("hey")
-        Pool.tau = initial_tau - t[i]/365
+        Pool.tau = initial_tau - t[i]
         print(f"New value of tau: {Pool.tau}")
         #Changing tau changes the value of the invariant even if no trade happens
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
