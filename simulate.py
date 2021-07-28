@@ -33,4 +33,4 @@ def simulate(Pool, t, gbm):
     effective_lp_value_array = np.array(effective_lp_value_array)
     mse = np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_array)/theoretical_lp_value_array).mean()
     terminal_square_error = ((theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/(theoretical_lp_value_array[-1]))**2
-    return mse, terminal_square_error
+    return theoretical_lp_value_array, effective_lp_value_array, mse, terminal_square_error

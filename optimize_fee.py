@@ -15,8 +15,8 @@ def returnErrors(fee, initial_tau, timestep_size, time_horizon, volatility, drif
     '''
     t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, timestep_size)
     Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
-    _, _, _, mse, terminal_deviation = simulate(Pool, t, gbm)
-    return mse, terminal_deviation
+    _, _, mse, terminal_square_error = simulate(Pool, t, gbm)
+    return mse, terminal_square_error
 
 def findOptimalFee(initial_tau, timestep_size, time_horizon, volatility, drift, strike, initial_price):
     '''
