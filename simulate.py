@@ -20,8 +20,8 @@ def simulate(Pool, t, gbm):
     effective_lp_value_array = []
     initial_tau = Pool.initial_tau
     for i in range(len(gbm)): 
-        theoretical_tau = initial_tau - t[i]/365
-        Pool.tau = initial_tau - t[i]/365
+        theoretical_tau = initial_tau - t[i]
+        Pool.tau = initial_tau - t[i]
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
         arbitrageExactly(gbm[i], Pool)
         theoretical_reserves_risky = getRiskyReservesGivenSpotPrice(gbm[i], Pool.K, Pool.sigma, theoretical_tau)
