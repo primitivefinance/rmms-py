@@ -78,7 +78,7 @@ class CoveredCallAMM():
         assert nonnegative(new_reserves_riskless)
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky) 
-        print('post invariant: ', self.invariant)
+        # print('post invariant: ', self.invariant)
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
@@ -90,14 +90,14 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        print(f"Old reserves riskless = {self.reserves_riskless}")
-        print(f"Old reserves risky = {self.reserves_risky}")
+        # print(f"Old reserves riskless = {self.reserves_riskless}")
+        # print(f"Old reserves risky = {self.reserves_risky}")
         new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in)
-        print(f"New reserves riskless = {new_reserves_riskless}")
+        # print(f"New reserves riskless = {new_reserves_riskless}")
         if new_reserves_riskless <= 0 or math.isnan(new_reserves_riskless):
             return 0, 0
         assert nonnegative(new_reserves_riskless)
-        print(f"New reserves risky = {self.reserves_risky + gamma*amount_in}")
+        # print(f"New reserves risky = {self.reserves_risky + gamma*amount_in}")
         amount_out = self.reserves_riskless - new_reserves_riskless
         # assert nonnegative(amount_out)
         effective_price_in_riskless = amount_out/amount_in
@@ -117,7 +117,7 @@ class CoveredCallAMM():
         self.reserves_risky -= amount_out
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky)
-        print("---------------------invariant here: ", self.invariant)
+        # print("---------------------invariant here: ", self.invariant)
         effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 
@@ -129,14 +129,14 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        print(f"Old reserves riskless = {self.reserves_riskless}")
-        print(f"Old reserves risky = {self.reserves_risky}")
+        # print(f"Old reserves riskless = {self.reserves_riskless}")
+        # print(f"Old reserves risky = {self.reserves_risky}")
         new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
-        print(f"New reserves risky = {new_reserves_risky}")
+        # print(f"New reserves risky = {new_reserves_risky}")
         if new_reserves_risky <= 0 or math.isnan(new_reserves_risky):
             return 0, 0
         assert nonnegative(new_reserves_risky)
-        print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in}")
+        # print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in}")
         amount_out = self.reserves_risky - new_reserves_risky
         # assert nonnegative(amount_out)
         effective_price_in_riskless = amount_in/amount_out

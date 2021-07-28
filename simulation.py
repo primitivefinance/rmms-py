@@ -102,16 +102,16 @@ for i in range(len(S)):
     #Update pool's time to maturity
     theoretical_tau = initial_tau - t[i]
 
-    print(f"___________________ \n \nStep {i}")
-    print("Invariant before updating tau =  ", Pool.invariant)
+    # print(f"___________________ \n \nStep {i}")
+    # print("Invariant before updating tau =  ", Pool.invariant)
     
     if i % dtau == 0:
         # print("hey")
         Pool.tau = initial_tau - t[i]
-        print("New tau = ", Pool.tau)
+        # print("New tau = ", Pool.tau)
         #Changing tau changes the value of the invariant even if no trade happens
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
-        print("Invariant after updating tau =  ", Pool.invariant)
+        # print("Invariant after updating tau =  ", Pool.invariant)
         spot_price_array.append(Pool.getSpotPrice())
         # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
         # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
@@ -195,5 +195,5 @@ if PLOT_PAYOFF_DRIFT:
         plt.savefig('sim_results/'+filename)
     plt.show()
 
-print("MSE = ", mse)
+# print("MSE = ", mse)
 # print("final divergence = ", 100*abs(theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/theoretical_lp_value_array[-1], "%")

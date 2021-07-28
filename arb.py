@@ -35,9 +35,9 @@ def arbitrageExactly(market_price, Pool):
     #Marginal price of buying epsilon risky
     price_buy_risky = Pool.getMarginalPriceSwapRisklessIn(0)
     
-    print(f"sell price {price_sell_risky}")
-    print(f"buy price {price_buy_risky}")
-    print(f"market price {market_price} \n")
+    # print(f"sell price {price_sell_risky}")
+    # print(f"buy price {price_buy_risky}")
+    # print(f"market price {market_price} \n")
 
     #Market price
     m = market_price
@@ -48,21 +48,21 @@ def arbitrageExactly(market_price, Pool):
         def func(amount_in):
             return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
-        print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
+        # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
         if (np.sign(func(EPSILON)) != np.sign(func((1 - R1)-EPSILON))):
             optimal_trade = scipy.optimize.bisect(func, EPSILON, (1 - R1) - EPSILON)
         else:
             optimal_trade = 1 - R1
         # print("result = ", func(optimal_trade))
-        print("Optimal trade: ", optimal_trade, " ETH in")
+        # print("Optimal trade: ", optimal_trade, " ETH in")
         assert optimal_trade >= 0
         amount_out, _ = Pool.virtualSwapAmountInRisky(optimal_trade)
         #The amount of the riskless asset we get after making the swap must be higher than the value in the riskless asset at which we obtained the amount in on the market
         profit = amount_out - optimal_trade*m
-        print(f"sell profit {profit} \n")
+        # print(f"sell profit {profit} \n")
         if profit > 0:
             _, _ = Pool.swapAmountInRisky(optimal_trade)
-            print(f"Invariant after arbitrage = {Pool.invariant}")
+            # print(f"Invariant after arbitrage = {Pool.invariant}")
         # print("profit = ", profit)
     
     #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
@@ -70,20 +70,20 @@ def arbitrageExactly(market_price, Pool):
         def func(amount_in):
             return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
-        print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
+        # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
         if (np.sign(func(EPSILON)) != np.sign(func(K - R2-EPSILON))):
             optimal_trade = scipy.optimize.bisect(func, EPSILON, (K - R2) - EPSILON)
         else: 
             optimal_trade = K- R2
             
         # print("result = ", func(optimal_trade))
-        print("Optimal trade: ", optimal_trade, " USD in")
+        # print("Optimal trade: ", optimal_trade, " USD in")
         assert optimal_trade >=0
         amount_out, _ = Pool.virtualSwapAmountInRiskless(optimal_trade)
         #The amount of risky asset we get out times the market price must result in an amount of riskless asset higher than what we initially put in the CFMM 
         profit = amount_out*m - optimal_trade
-        print(f"buy profit {profit} \n")
+        # print(f"buy profit {profit} \n")
         if profit > 0:
             _, _ = Pool.swapAmountInRiskless(optimal_trade)
-            print(f"Invariant after arbitrage = {Pool.invariant}")
+            # print(f"Invariant after arbitrage = {Pool.invariant}")
         # print("profit = ", profit)
