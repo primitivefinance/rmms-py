@@ -290,8 +290,8 @@ if False:
     plt.title("Example 4")
     plt.show()
 
-#Fee optimization tests
-if True: 
+#Simulate and return errors tests 
+if False: 
     fee = 0.01
     strike = 2000
     initial_price = 0.8*2000
@@ -306,6 +306,35 @@ if True:
     # mse, terminal_square_error = simulate(Pool, t, gbm)
     from optimize_fee import returnErrors, findOptimalFee
     mse, terminal_deviation = returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
+
+if True: 
+    fee = 0.01
+    strike = 2000
+    initial_price = 0.8*2000
+    volatility = 0.5
+    drift = 0.5
+    time_steps_size = 0.0027397260274
+    time_horizon = 1
+    initial_tau = 1
+    # fee = findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
+    # print(fee)
+    from optimize_fee import returnErrors
+    def maxErrorFromFee(fee): 
+        '''
+        Return the max of the average mse and average terminal square error from 100 
+        simulations with different price actions given these parameters
+        '''
+        mse_array = []
+        square_terminal_error_array = []
+        for i in range(100):
+            mse, square_terminal_error = returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, strike*0.8)
+            mse_array.append(mse)
+            square_terminal_error_array.append(square_terminal_error)
+        average_mse = np.mean(mse_array)
+        average_square_terminal_error = np.mean(square_terminal_error_array)
+        return max(average_mse, average_square_terminal_error)
+
+    m = maxErrorFromFee(0.01)
 
 
 
