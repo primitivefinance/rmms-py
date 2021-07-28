@@ -358,7 +358,7 @@ def main():
             Return the max of the average mse and average terminal square error from 100 
             simulations with different price actions given these parameters
             '''
-            results = Parallel(n_jobs=-2, verbose=1, backend='multiprocessing')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, strike*0.8) for i in range(2))
+            results = Parallel(n_jobs=-2, verbose=1, backend='multiprocessing')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, strike*0.8) for i in range(5))
             print('results = ', results)
             average_mse = np.mean([item[0] for item in results])
             average_square_terminal_error = np.mean([item[1] for item in results])
@@ -371,7 +371,7 @@ def main():
             '''
             mse_array = []
             square_terminal_error_array = []
-            for i in range(2):
+            for i in range(5):
                 mse, square_terminal_error = returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, strike*0.8)
                 mse_array.append(mse)
                 square_terminal_error_array.append(square_terminal_error)
