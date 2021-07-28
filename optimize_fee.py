@@ -14,7 +14,7 @@ def returnErrors(fee, initial_tau, timestep_size, time_horizon, volatility, drif
     optimal arbitrage for that gbm
     '''
     t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, timestep_size)
-    Pool = cfmm.CoveredCallAMM(0.5, volatility, drift, initial_tau, fee)
+    Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
     _, _, _, mse, terminal_deviation = simulate(Pool, t, gbm)
     return mse, terminal_deviation
 
@@ -46,6 +46,7 @@ def findOptimalFee(initial_tau, timestep_size, time_horizon, volatility, drift, 
         average_mse = np.mean(mse_array)
         average_square_terminal_error = np.mean(square_terminal_error_array)
         return max(average_mse, average_square_terminal_error)
+
     sol = minimize_scalar(maxErrorFromFee, bounds=(0, 0.15), method='Brent')
     optimal_fee = sol.x
     return optimal_fee
