@@ -55,6 +55,7 @@ def arbitrageExactly(market_price, Pool):
             optimal_trade = 1 - R1
         # print("result = ", func(optimal_trade))
         print("Optimal trade: ", optimal_trade, " ETH in")
+        assert optimal_trade >= 0
         amount_out, _ = Pool.virtualSwapAmountInRisky(optimal_trade)
         #The amount of the riskless asset we get after making the swap must be higher than the value in the riskless asset at which we obtained the amount in on the market
         profit = amount_out - optimal_trade*m
@@ -77,6 +78,7 @@ def arbitrageExactly(market_price, Pool):
             
         # print("result = ", func(optimal_trade))
         print("Optimal trade: ", optimal_trade, " USD in")
+        assert optimal_trade >=0
         amount_out, _ = Pool.virtualSwapAmountInRiskless(optimal_trade)
         #The amount of risky asset we get out times the market price must result in an amount of riskless asset higher than what we initially put in the CFMM 
         profit = amount_out*m - optimal_trade
