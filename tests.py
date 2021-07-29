@@ -336,11 +336,11 @@ def main():
             return max(average_mse, average_square_terminal_error)
         m = maxErrorFromFee(0.01)
 
-    #Test parallel processing
-    if True:
+    # Test parallel processing
+    if False:
         import time 
         from optimize_fee import returnErrors
-        from joblib import Parallel, delayed
+        from joblib import Parallel, delayed, parallel_backend
 
         fee = 0.01
         strike = 2000
@@ -358,8 +358,9 @@ def main():
             Return the max of the average mse and average terminal square error from 100 
             simulations with different price actions given these parameters
             '''
-            results = Parallel(n_jobs=-2, verbose=1, backend='multiprocessing')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, strike*0.8) for i in range(5))
-            print('results = ', results)
+            with parallel_backend("loky", inner_max_num_threads=24):
+                results = Parallel(n_jobs=-1, verbose=1)(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, strike*0.8) for i in range(5))
+            # print('results = ', results)
             average_mse = np.mean([item[0] for item in results])
             average_square_terminal_error = np.mean([item[1] for item in results])
             return max(average_mse, average_square_terminal_error)
@@ -411,6 +412,41 @@ def main():
         # m = maxErrorFromFee(0.01)
         # end = time.time()
         # print("Runtime with numba (from cache): ", end - start)
+    
+    # Test nested parallel ordering joblib
+    if True: 
+        from joblib import Parallel, delayed
+        import numpy as np
+
+        # 2D test
+
+        # def func(x, y):
+        #     return x*y
+
+        # params = [[1,2,3], [1, 2, 3]]
+
+        # def map2DArrayTo1D(i, j):
+        #     return i*len(params[0])+j
+        
+        # result = Parallel(n_jobs=-1, verbose=1)(delayed(func)(x,y) for y in params[1] for x in params[0] )
+        # # original_shape = 
+        # print(result[map2DArrayTo1D(2,0)])
+
+        # 3D test
+        def func(x, y, z):
+            return x*y*z
+
+        params = [[1,2,3], [1, 2, 3, 4], [1, 2]]
+
+        def map3DArrayTo1D(i, j,k):
+            return i + len(params[0])*(j + k*len(params[2]))
+        
+        #Returns result in row_major order
+        result = Parallel(n_jobs=-1, verbose=1)(delayed(func)(x,y,z) for z in params[2]for y in params[1] for x in params[0] )
+        # original_shape = 
+        print(result[map3DArrayTo1D(0,3,0)])
+        
+
 
 if __name__ == '__main__':
     main()
