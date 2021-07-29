@@ -31,6 +31,6 @@ def simulate(Pool, t, gbm):
         effective_lp_value_array.append(Pool.reserves_risky*gbm[i] + Pool.reserves_riskless)
     theoretical_lp_value_array = np.array(theoretical_lp_value_array)
     effective_lp_value_array = np.array(effective_lp_value_array)
-    mse = np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_array)/theoretical_lp_value_array).mean()
-    terminal_square_error = ((theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/(theoretical_lp_value_array[-1]))**2
-    return theoretical_lp_value_array, effective_lp_value_array, mse, terminal_square_error
+    mean_error = np.abs(np.subtract(theoretical_lp_value_array, effective_lp_value_array)/theoretical_lp_value_array).mean()
+    terminal_error = np.abs((theoretical_lp_value_array[-1] - effective_lp_value_array[-1])/(theoretical_lp_value_array[-1]))
+    return theoretical_lp_value_array, effective_lp_value_array, mean_error, terminal_error
