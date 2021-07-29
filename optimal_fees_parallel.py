@@ -1,3 +1,4 @@
+from joblib.parallel import Parallel, delayed
 import numpy as np 
 import optimize_fee
 
@@ -29,13 +30,18 @@ STRIKE = 2000
 parameters = [np.linspace(0.5, 1.5, 3), np.linspace(-2, 2, 3), np.linspace(0.8, 0.9, 3)]
 optimal_fee_array = [[0 for i in range(len(parameters[0]))], [0 for i in range(len(parameters[1]))], [0 for i in range(len(parameters[2]))]]
 
+def findOptimalFeeParallel(volatility, drift, strike_proportion):
+    return optimize_fee.findOptimalFee(INITIAL_TAU, TIME_STEPS_SIZE, TIME_HORIZON, volatility, drift, STRIKE, STRIKE*strike_proportion)
+
+optimal_fee_array = Parallel(n_jobs=-1, verbose=1)(delayed(findOptimalFeeParallel)(volatility, drift, strike_proportion) for strike_proportion in parameters[2] for drift in parameters[1] for volatility in parameters[0])
+
 #Main loop to find optimal params
-for i in range(len(parameters[0])): 
-    for j in range(len(parameters[1])):
-        for m in range(len(parameters[2])):
-            volatility = parameters[0][i]
-            drift = parameters[1][j]
-            strike_proportion = parameters[2][m]
-            initial_price = STRIKE*strike_proportion
-            optimal_fee = optimize_fee.findOptimalFee(INITIAL_TAU, TIME_STEPS_SIZE, TIME_HORIZON, volatility, drift, STRIKE, initial_price)
-            optimal_fee_array[i][j][m] = optimal_fee          
+# for i in range(len(parameters[0])): 
+#     for j in range(len(parameters[1])):
+#         for m in range(len(parameters[2])):
+#             volatility = parameters[0][i]
+#             drift = parameters[1][j]
+#             strike_proportion = parameters[2][m]
+#             initial_price = STRIKE*strike_proportion
+#             optimal_fee = findOptimalFeeParallel(volatility, drift, initial_price)
+#             optimal_fee_array[i][j][m] = optimal_fee
