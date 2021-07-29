@@ -438,12 +438,22 @@ def main():
 
         params = [[1,2,3], [1, 2, 3, 4], [1, 2]]
 
-        def map3DArrayTo1D(i, j,k):
+        params_set_universe = [[[0 for i in range(len(params[2]))] for j in range(len(params[1]))] for k in range(len(params[0]))]
+
+        for i in range(len(params[0])-1):
+            for j in range(len(params[1])-1):
+                for k in range(len(params[2])-1):
+                    params_set_universe[i][j][k] = (params[0][i], params[1][j], params[2][k])
+                
+        print(params_set_universe)
+
+        def map3DArrayTo1D(i, j, k):
             return i + len(params[0])*(j + k*len(params[2]))
         
         #Returns result in row_major order
         result = Parallel(n_jobs=-1, verbose=1)(delayed(func)(x,y,z) for z in params[2]for y in params[1] for x in params[0] )
         # original_shape = 
+        print(params_set_universe[0, 3, 0])
         print(result[map3DArrayTo1D(0,3,0)])
         
 
