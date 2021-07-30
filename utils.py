@@ -26,7 +26,11 @@ def quantilePrime(x):
     Analytical formula for the derivative of the quantile function (inverse of
     the CDF).
     '''
-    return norm.pdf(norm.ppf(x))**-1
+    EPSILON = 1e-16
+    if (x > 1 - EPSILON) or (x < 0 + EPSILON):
+        return 0
+    else:
+        return norm.pdf(norm.ppf(x))**-1
 
 def blackScholesCoveredCallSpotPrice(x, K, sigma, tau):
     '''
