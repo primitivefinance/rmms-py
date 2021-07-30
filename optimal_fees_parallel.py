@@ -1,6 +1,9 @@
 from joblib.parallel import Parallel, delayed
 import numpy as np 
 import optimize_fee
+import json
+from datetime import datetime
+from pathlib import Path
 
 # Script used to map a tuple of (volatility, drift, strike price) to the optial
 # fee to choose for the pool, i.e. the fee that minimizes the max of the mean 
@@ -27,15 +30,18 @@ STRIKE = 2000
 # *for example if the strike priced is K, a parameter of 0.8 will
 # start the simulation with an initial price of 0.8*K
 
-parameters = [np.linspace(0.5, 1.5, 3), np.linspace(-2, 2, 3), np.linspace(0.8, 0.9, 3)]
+parameters = [np.linspace(0.5, 1.5, 2), np.linspace(-2, 2, 2), np.linspace(0.8, 0.9, 2)]
 optimal_fee_array = [[0 for i in range(len(parameters[0]))], [0 for i in range(len(parameters[1]))], [0 for i in range(len(parameters[2]))]]
 
 def findOptimalFeeParallel(volatility, drift, strike_proportion):
     return optimize_fee.findOptimalFee(INITIAL_TAU, TIME_STEPS_SIZE, TIME_HORIZON, volatility, drift, STRIKE, STRIKE*strike_proportion)
 
-optimal_fee_array = Parallel(n_jobs=-1, verbose=1)(delayed(findOptimalFeeParallel)(volatility, drift, strike_proportion) for strike_proportion in parameters[2] for drift in parameters[1] for volatility in parameters[0])
+# With parallelization of the main loop
 
-#Main loop to find optimal params
+optimal_fee_array = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(findOptimalFeeParallel)(volatility, drift, strike_proportion) for strike_proportion in parameters[2] for drift in parameters[1] for volatility in parameters[0])
+
+# Without parallelization of the main loop
+
 # for i in range(len(parameters[0])): 
 #     for j in range(len(parameters[1])):
 #         for m in range(len(parameters[2])):
@@ -45,3 +51,15 @@ optimal_fee_array = Parallel(n_jobs=-1, verbose=1)(delayed(findOptimalFeeParalle
 #             initial_price = STRIKE*strike_proportion
 #             optimal_fee = findOptimalFeeParallel(volatility, drift, initial_price)
 #             optimal_fee_array[i][j][m] = optimal_fee
+
+data = {}
+data['parameters'] = np.array(parameters)
+data['optimal_fees'] = optimal_fee_array
+now = datetime.now()
+dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
+filename = 'optimization_results_'+ dt_string + '.dat'
+Path('optimization').mkdir(parents=True, exist_ok=True)
+with open('optimization/'+filename, 'w+') as f:
+    json.dump(data, f)
+
+
