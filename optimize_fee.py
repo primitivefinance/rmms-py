@@ -32,7 +32,7 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         Return the max of the average mse and average terminal square error from 100 
         simulations with different price actions given these parameters
         '''
-        results = Parallel(n_jobs=-1, verbose=1, backend='multiprocessing')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(100))
+        results = Parallel(n_jobs=-1, verbose=1, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(100))
         average_error = np.mean([item[0] for item in results])
         average_terminal_error = np.mean([item[1] for item in results])
         return max(average_error, average_terminal_error)
