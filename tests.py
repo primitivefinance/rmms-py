@@ -414,7 +414,7 @@ def main():
         # print("Runtime with numba (from cache): ", end - start)
     
     # Test nested parallel ordering joblib
-    if True: 
+    if False: 
         from joblib import Parallel, delayed
         import numpy as np
 
@@ -456,7 +456,23 @@ def main():
         print(params_set_universe[0, 3, 0])
         print(result[map3DArrayTo1D(0,3,0)])
         
-
+    if True: 
+        import numpy as np
+        import os
+        import json
+        from datetime import datetime
+        from pathlib import Path
+        parameters = np.array([np.linspace(0.5, 1.5, 3), np.linspace(-2, 2, 3), np.linspace(0.8, 0.9, 3)])
+        optimal_fee_array = [0, 1,2,3,4,5,6,7,8,9,10]
+        data = {}
+        data['parameters'] = parameters.tolist()
+        data['optimal_fees'] = optimal_fee_array
+        now = datetime.now()
+        dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
+        filename = 'optimization_results_'+ dt_string + '.dat'
+        Path('optimization').mkdir(parents=True, exist_ok=True)
+        with open('optimization/'+filename, 'w+') as f:
+            json.dump(data, f)
 
 if __name__ == '__main__':
     main()
