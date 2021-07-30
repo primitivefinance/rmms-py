@@ -7,7 +7,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy import optimize
 
-EPSILON = 1e-12
+EPSILON = 1e-15
 
 def arbitrageExactly(market_price, Pool):
     '''
@@ -50,7 +50,7 @@ def arbitrageExactly(market_price, Pool):
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
         if (np.sign(func(EPSILON)) != np.sign(func((1 - R1)-EPSILON))):
-            optimal_trade = scipy.optimize.bisect(func, EPSILON, (1 - R1) - EPSILON)
+            optimal_trade = scipy.optimize.bisect(func, EPSILON, 1 - R1 + EPSILON)
         else:
             optimal_trade = 1 - R1
         # print("result = ", func(optimal_trade))
@@ -71,8 +71,8 @@ def arbitrageExactly(market_price, Pool):
             return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
-        if (np.sign(func(EPSILON)) != np.sign(func(K - R2-EPSILON))):
-            optimal_trade = scipy.optimize.bisect(func, EPSILON, (K - R2) - EPSILON)
+        if (np.sign(func(EPSILON)) != np.sign(func(K - R2 - EPSILON))):
+            optimal_trade = scipy.optimize.bisect(func, EPSILON, K - R2 + EPSILON)
         else: 
             optimal_trade = K- R2
             
