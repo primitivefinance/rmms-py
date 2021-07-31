@@ -3,6 +3,7 @@ Contains a set of functions used to find the optimal fee for a given set of para
 '''
 
 import cfmm
+import gc
 import numpy as np
 from scipy.optimize import minimize_scalar
 from simulate import simulate
@@ -18,6 +19,10 @@ def returnErrors(fee, initial_tau, timestep_size, time_horizon, volatility, drif
     t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, timestep_size)
     Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
     _, _, mean_error, terminal_error = simulate(Pool, t, gbm)
+    del Pool 
+    del gbm 
+    del t
+    gc.collect()
     return mean_error, terminal_error
 
 def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price):
@@ -32,7 +37,7 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         Return the max of the average mse and average terminal square error from 100 
         simulations with different price actions given these parameters
         '''
-        results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(10))
+        results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(20))
         average_error = np.mean([item[0] for item in results])
         average_terminal_error = np.mean([item[1] for item in results])
         return max(average_error, average_terminal_error)
