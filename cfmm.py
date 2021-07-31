@@ -4,6 +4,7 @@ Contains the necessary AMM logic.
 
 import math
 from math import nan
+from math import inf
 import scipy
 from scipy.stats import norm
 from scipy import optimize
@@ -12,7 +13,7 @@ import numpy as np
 
 from utils import nonnegative, quantilePrime, blackScholesCoveredCallSpotPrice
 
-EPSILON = 1e-10
+EPSILON = 1e-15
 
 class CoveredCallAMM():
     '''
@@ -118,7 +119,10 @@ class CoveredCallAMM():
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky)
         # print("---------------------invariant here: ", self.invariant)
-        effective_price_in_riskless = amount_in/amount_out
+        if amount_out == 0:
+            effective_price_in_riskless = inf
+        else: 
+            effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 
     def virtualSwapAmountInRiskless(self, amount_in): 
@@ -139,7 +143,10 @@ class CoveredCallAMM():
         # print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in}")
         amount_out = self.reserves_risky - new_reserves_risky
         # assert nonnegative(amount_out)
-        effective_price_in_riskless = amount_in/amount_out
+        if amount_out == 0:
+            effective_price_in_riskless = inf
+        else: 
+            effective_price_in_riskless = amount_in/amount_out
         return amount_out, effective_price_in_riskless
 
 
@@ -179,7 +186,10 @@ class CoveredCallAMM():
         K = self.K  
         sigma = self.sigma
         tau = self.tau
-        return  1/(gamma * norm.pdf(norm.ppf((R + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K))
+        if ((gamma * norm.pdf(norm.ppf((R + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) == 0):
+            return inf
+        else: 
+            return  1/(gamma * norm.pdf(norm.ppf((R + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K))
 
     def getRiskyReservesGivenSpotPrice(self, S):
         '''
