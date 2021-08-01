@@ -32,7 +32,7 @@ STRIKE = 2000
 # *for example if the strike priced is K, a parameter of 0.8 will
 # start the simulation with an initial price of 0.8*K
 
-parameters = [np.linspace(0.5, 1.5, 2), np.linspace(-2, 2, 2), np.linspace(0.8, 0.9, 2)]
+parameters = [np.linspace(0.5, 1.5, 3), np.linspace(-2, 2, 3), [0.8]]
 optimal_fee_array = [[0 for i in range(len(parameters[0]))], [0 for i in range(len(parameters[1]))], [0 for i in range(len(parameters[2]))]]
 
 def findOptimalFeeParallel(volatility, drift, strike_proportion):
@@ -58,7 +58,7 @@ for i in range(len(parameters[0])):
             strike_proportion = parameters[2][m]
             initial_price = STRIKE*strike_proportion
             optimal_fee = findOptimalFeeParallel(volatility, drift, initial_price)
-            optimal_fee_array[i][j][m] = optimal_fee
+            # optimal_fee_array[i][j][m] = optimal_fee
 
 end = time.time()
 
