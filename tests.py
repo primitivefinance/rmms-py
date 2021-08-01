@@ -1,8 +1,15 @@
+from time import time
+from joblib.parallel import Parallel, delayed
+from scipy.optimize.zeros import results_c
 from time_series import generateGBM
 from simulate import simulate
 from optimize_fee import findOptimalFee
 from scipy.stats import norm
 import matplotlib.pyplot as plt
+import os
+import json
+from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import cfmm
@@ -12,35 +19,35 @@ import matplotlib.pyplot as plt
 import arb
 
 def main():
-    def getRisklessGivenRisky(risky, K, sigma, tau): 
-        if risky == 0:
-            return K
-        elif risky == 1:
-            return 0
-        return K*norm.cdf(norm.ppf(1 - risky) - sigma*np.sqrt(tau))
+    # def getRisklessGivenRisky(risky, K, sigma, tau): 
+    #     if risky == 0:
+    #         return K
+    #     elif risky == 1:
+    #         return 0
+    #     return K*norm.cdf(norm.ppf(1 - risky) - sigma*np.sqrt(tau))
 
-    #Simulation parameters
+    # #Simulation parameters
 
-    #Annualized volatility
-    sigma = 0.50
-    sigma_str = str(sigma)
+    # #Annualized volatility
+    # sigma = 0.50
+    # sigma_str = str(sigma)
 
-    #Initial time to expiry
-    initial_tau = 1
-    #Strike price
-    K = 1100
-    #Fee 
-    fee = 0
-    #Initial amount of the risky asset in the pool
-    initial_amount_risky = 0.5 
-    #Generate AMM pool
-    Pool = cfmm.CoveredCallAMM(initial_amount_risky, K, sigma, initial_tau, fee)
-    #The current reserves in the pool
-    riskless_reserves = Pool.reserves_riskless
+    # #Initial time to expiry
+    # initial_tau = 1
+    # #Strike price
+    # K = 1100
+    # #Fee 
+    # fee = 0
+    # #Initial amount of the risky asset in the pool
+    # initial_amount_risky = 0.5 
+    # #Generate AMM pool
+    # Pool = cfmm.CoveredCallAMM(initial_amount_risky, K, sigma, initial_tau, fee)
+    # #The current reserves in the pool
+    # riskless_reserves = Pool.reserves_riskless
 
-    EPSILON = 1e-8
+    # EPSILON = 1e-8
 
-    Pool.tau -= 1/365
+    # Pool.tau -= 1/365
 
     # print(blackScholesCoveredCallSpotPrice(0.5, 1100, 0.5, 1))
     # def BSPriceSimplified(x, K, sigma, tau):
@@ -456,12 +463,7 @@ def main():
         print(params_set_universe[0, 3, 0])
         print(result[map3DArrayTo1D(0,3,0)])
         
-    if True: 
-        import numpy as np
-        import os
-        import json
-        from datetime import datetime
-        from pathlib import Path
+    if False: 
         parameters = np.array([np.linspace(0.5, 1.5, 3), np.linspace(-2, 2, 3), np.linspace(0.8, 0.9, 3)])
         optimal_fee_array = [0, 1,2,3,4,5,6,7,8,9,10]
         data = {}
@@ -473,6 +475,75 @@ def main():
         Path('optimization').mkdir(parents=True, exist_ok=True)
         with open('optimization/'+filename, 'w+') as f:
             json.dump(data, f)
+
+    # Nested parallel benchmark
+    if True:    
+
+        import numpy as np 
+        from joblib import Parallel, delayed
+        import time 
+
+        import time_series
+        import cfmm
+
+        fee = 0.01
+        strike = 2000
+        initial_price = 0.8*2000
+        volatility = 0.8
+        drift = 0.5
+        time_steps_size = 0.0027397260274
+        time_horizon = 1
+        initial_tau = 1
+
+        count = [0]
+
+        def simulation():
+            t, gbm = time_series.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+            Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
+            simulate(Pool, t, gbm)
+            count[0]+=1
+
+        def makeExp(x):
+            return np.exp(x)
+
+        def funcParallel(n):
+            Parallel(n_jobs=-1, verbose=1, backend="loky")(delayed(simulation)() for i in range(n))
+
+        def funcNonParallel(n):
+            for i in range(N_INNER_SIMULATIONS):
+                simulation()
+
+        N_INNER_SIMULATIONS = 2
+        N_OUTER_SIMULATIONS = 2
+
+        
+
+        # Completely non-parallelized
+        start_sequential = time.time()
+        for i in range(N_OUTER_SIMULATIONS): 
+            funcNonParallel(N_INNER_SIMULATIONS)
+        end_sequential = time.time()
+
+        # Parent loop parallelized
+        start_partial_parallelize = time.time()
+        results = Parallel(n_jobs=-1, verbose = 0, backend='loky')(delayed(funcNonParallel)(N_INNER_SIMULATIONS) for i in range(N_OUTER_SIMULATIONS))
+        end_partial_parallelize = time.time()
+
+        # Full parallelization
+        start_nested = time.time()
+        results = Parallel(n_jobs=-1, verbose = 0, backend='loky')(delayed(funcParallel)(N_INNER_SIMULATIONS) for i in range(N_OUTER_SIMULATIONS))
+        end_nested = time.time()
+
+        print("Total number of simulations per method: ", count[0]/3)
+        print("Without Joblib: ", end_sequential - start_sequential)
+        print("With partial parallelization: ", end_partial_parallelize - start_partial_parallelize)
+        print("With nested Joblib: ", end_nested - start_nested)
+
+        # print(results)
+
+        # print(result)
+        
+
 
 if __name__ == '__main__':
     main()
