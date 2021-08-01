@@ -40,6 +40,8 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(20))
         average_error = np.mean([item[0] for item in results])
         average_terminal_error = np.mean([item[1] for item in results])
+        del results
+        gc.collect()
         return max(average_error, average_terminal_error)
 
     sol = minimize_scalar(maxErrorFromFee, bounds=(0, 0.15), method='Brent')
