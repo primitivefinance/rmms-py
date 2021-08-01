@@ -50,7 +50,7 @@ def getRiskyReservesGivenSpotPrice(S, K, sigma, tau):
     if S > K:
         sol, r = newton(func, 0.01, maxiter=100, disp=False, full_output=True)
     else: 
-        sol, r = newton(func, 0.5, maxiter=500, disp=False, full_output=True)
+        sol, r = newton(func, 0.5, maxiter=100, disp=False, full_output=True)
     reserves_risky = r.root
     #The reserves almost don't change anymore at the boundaries, so if we haven't 
     # converged, we return what we logically know to be very close to the actual 
