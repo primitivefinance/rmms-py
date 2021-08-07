@@ -61,6 +61,20 @@ def getRiskyReservesGivenSpotPrice(S, K, sigma, tau):
         return 1
     return reserves_risky
 
+def getRiskyGivenSpotPriceWithDelta(S, K, sigma, tau):
+    '''
+    Given some spot price S, get the risky reserves corresponding to that spot price using results
+    from options theory, thereby avoiding the use of an iterative solver.
+    '''
+    if tau <= 0:
+        if S > K: 
+            return 0
+        if S < K: 
+            return 1
+    else: 
+        d1 = (np.log(S/K) + (tau*(sigma**2)/2))/(sigma*np.sqrt(tau))
+        return 1 -norm.cdf(d1)
+
 def getRisklessGivenRisky(risky, K, sigma, tau): 
     if risky == 0:
         return K

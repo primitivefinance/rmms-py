@@ -5,7 +5,7 @@ Functions used to run an actual simulation
 import numpy as np 
 
 from arb import arbitrageExactly
-from utils import getRiskyReservesGivenSpotPrice, getRisklessGivenRisky
+from utils import getRiskyGivenSpotPriceWithDelta, getRiskyReservesGivenSpotPrice, getRisklessGivenRisky
 
 
 def simulate(Pool, t, gbm):
@@ -24,7 +24,7 @@ def simulate(Pool, t, gbm):
         Pool.tau = initial_tau - t[i]
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
         arbitrageExactly(gbm[i], Pool)
-        theoretical_reserves_risky = getRiskyReservesGivenSpotPrice(gbm[i], Pool.K, Pool.sigma, theoretical_tau)
+        theoretical_reserves_risky = getRiskyGivenSpotPriceWithDelta(gbm[i], Pool.K, Pool.sigma, theoretical_tau)
         theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, Pool.K, Pool.sigma, theoretical_tau)
         theoretical_lp_value = theoretical_reserves_risky*gbm[i] + theoretical_reserves_riskless
         theoretical_lp_value_array.append(theoretical_lp_value)
