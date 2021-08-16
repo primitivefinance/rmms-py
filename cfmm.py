@@ -186,7 +186,6 @@ class CoveredCallAMM():
         K = self.K  
         sigma = self.sigma
         tau = self.tau
-        print("LOOK HERE: ", (R + gamma*amount_in - k)/K)
         if ((gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) == 0):
             return inf
         else: 
