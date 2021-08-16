@@ -171,7 +171,7 @@ class CoveredCallAMM():
         K = self.K  
         sigma = self.sigma
         tau = self.tau
-        return gamma*K*norm.pdf(norm.ppf(1 - R - gamma*amount_in) - sigma*np.sqrt(tau))*quantilePrime(1 - R - gamma*amount_in)
+        return gamma*K*norm.pdf(norm.ppf(float(1 - R - gamma*amount_in)) - sigma*np.sqrt(tau))*quantilePrime(1 - R - gamma*amount_in)
 
     def getMarginalPriceSwapRisklessIn(self, amount_in):
         '''
@@ -186,10 +186,11 @@ class CoveredCallAMM():
         K = self.K  
         sigma = self.sigma
         tau = self.tau
-        if ((gamma * norm.pdf(norm.ppf((R + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) == 0):
+        print("LOOK HERE: ", (R + gamma*amount_in - k)/K)
+        if ((gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) == 0):
             return inf
         else: 
-            return  1/(gamma * norm.pdf(norm.ppf((R + gamma*amount_in - k)/K) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K))
+            return  1/(gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K))
 
     def getRiskyReservesGivenSpotPrice(self, S):
         '''
