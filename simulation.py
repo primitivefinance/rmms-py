@@ -7,10 +7,9 @@ from configparser import ConfigParser
 
 import cfmm
 import time_series
-from utils import getRiskyReservesGivenSpotPrice
+from utils import getRiskyGivenSpotPriceWithDelta
 from utils import getRisklessGivenRisky
 from arb import arbitrageExactly
-from simulate import simulate
 
 import matplotlib.pyplot as plt 
 import numpy as np
@@ -125,7 +124,7 @@ for i in range(len(S)):
         max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
         min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
         #Get reserves given the reference price in the zero fees case
-        theoretical_reserves_risky = getRiskyReservesGivenSpotPrice(S[i], Pool.K, Pool.sigma, theoretical_tau)
+        theoretical_reserves_risky = getRiskyGivenSpotPriceWithDelta(S[i], Pool.K, Pool.sigma, theoretical_tau)
         theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, Pool.K, Pool.sigma, theoretical_tau)
         theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
         theoretical_lp_value_array.append(theoretical_lp_value)
