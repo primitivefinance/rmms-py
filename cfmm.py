@@ -187,7 +187,8 @@ class CoveredCallAMM():
         sigma = self.sigma
         tau = self.tau
         if ((gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) == 0):
-            return inf
+            #Infinity
+            return 1e8
         else: 
             return  1/(gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K))
 
