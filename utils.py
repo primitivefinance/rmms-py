@@ -5,6 +5,7 @@ covered call AMM relevant math.
 
 import math
 from math import nan
+from math import inf
 import numpy as np
 from scipy.optimize import newton
 from scipy.stats import norm
@@ -28,7 +29,7 @@ def quantilePrime(x):
     '''
     EPSILON = 1e-16
     if (x > 1 - EPSILON) or (x < 0 + EPSILON):
-        return 0
+        return inf
     else:
         return norm.pdf(norm.ppf(x))**-1
 
