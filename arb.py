@@ -6,8 +6,11 @@ import scipy
 import numpy as np
 from scipy.stats import norm
 from scipy import optimize
+from mpmath import findroot
+from illinois_algorithm import illinois
+from math import inf
 
-EPSILON = 1e-15
+EPSILON = 1e-6
 
 def arbitrageExactly(market_price, Pool):
     '''
@@ -28,6 +31,13 @@ def arbitrageExactly(market_price, Pool):
     sigma = Pool.sigma
     tau = Pool.tau
 
+    # print("gamma = ", gamma)
+    # print("reserves risky = ", R1)
+    # print("reserves riskless = ", R2)
+    # print("strike = ", K)
+    # print("invariant = ", k)
+    # print("volatility = ", sigma)
+    # print("tau = ", tau)
 
     #Marginal price of selling epsilon risky
     # price_sell_risky = gamma*K*norm.pdf(norm.ppf(1 - R1) - sigma*np.sqrt(tau))*quantilePrime(1 - R1)
@@ -49,8 +59,8 @@ def arbitrageExactly(market_price, Pool):
             return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
-        if (np.sign(func(EPSILON)) != np.sign(func(1 - R1 + EPSILON))):
-            optimal_trade = scipy.optimize.bisect(func, EPSILON, 1 - R1 + EPSILON)
+        if (np.sign(func(EPSILON)) != np.sign(func(1 - R1 - EPSILON))):
+            optimal_trade = illinois(func, 1 - R1 - EPSILON, EPSILON, 0)
         else:
             optimal_trade = 1 - R1
         # print("result = ", func(optimal_trade))
@@ -71,8 +81,9 @@ def arbitrageExactly(market_price, Pool):
             return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
-        if (np.sign(func(EPSILON)) != np.sign(func(K - R2 + EPSILON))):
-            optimal_trade = scipy.optimize.bisect(func, EPSILON, K - R2 + EPSILON)
+        if (np.sign(func(EPSILON)) != np.sign(func((K+k-R2)/gamma - EPSILON))):
+            #Because of the negative invariant, the max amount to put in is NOT K - R2. 
+            optimal_trade = illinois(func, (K+k-R2)/gamma - EPSILON, EPSILON, 0)
         else: 
             optimal_trade = K- R2
             
