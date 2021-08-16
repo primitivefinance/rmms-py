@@ -477,7 +477,7 @@ def main():
             json.dump(data, f)
 
     # Nested parallel benchmark
-    if True:    
+    if False:    
 
         import numpy as np 
         from joblib import Parallel, delayed
@@ -543,7 +543,58 @@ def main():
 
         # print(result)
         
+    #Simulation runtime test    
+    if True: 
+        import time
+        import time_series
+        import cfmm
+        from simulate import simulate
+        fee = 0.01
+        strike = 2000
+        initial_price = 0.8*2000
+        volatility = 0.5
+        drift = 0.5
+        time_steps_size = 0.0027397260274
+        time_horizon = 1
+        initial_tau = 1
+        total_time = 0
+        Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
+        for i in range(100):
+            t, gbm = time_series.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+            start = time.time()
+            _, _, _, _ = simulate(Pool, t, gbm)
+            end = time.time()
+            total_time += end-start
+        print("Average runtime: ", total_time/100)
 
+    if False: 
+        import utils
+        print(utils.getRiskyGivenSpotPriceWithDelta(2000, 3000, 0.5, 1))
+        print(utils.getRiskyReservesGivenSpotPrice(2000, 3000, 0.5, 1))
+
+    if False: 
+        import numpy as np
+        import time
+        import time_series
+        import cfmm
+        from simulate import simulate
+        fee = 0.05
+        strike = 2000
+        initial_price = 0.8*2000
+        volatility = 0.5
+        drift = 0.5
+        time_steps_size = 0.0027397260274
+        time_horizon = 1
+        initial_tau = 1
+        total_time = 0
+        np.random.seed(15425)
+        Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
+        t, gbm = time_series.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+        start = time.time()
+        _, _, _, d = simulate(Pool, t, gbm)
+        end = time.time()
+        print("RUNTIME: ", end-start)
+        print(d)
 
 if __name__ == '__main__':
     main()
