@@ -33,7 +33,12 @@ STRIKE = 2000
 # start the simulation with an initial price of 0.8*K
 
 parameters = [np.linspace(0.5, 1.5, 3), np.linspace(-2, 2, 3), [0.8]]
-optimal_fee_array = [[0 for i in range(len(parameters[0]))], [0 for i in range(len(parameters[1]))], [0 for i in range(len(parameters[2]))]]
+# optimal_fee_array = [[0 for i in range(len(parameters[0]))], [0 for i in range(len(parameters[1]))], [0 for i in range(len(parameters[2]))]]
+optimal_fee_array = [
+    [
+        [0 for i in range(len(parameters[2]))] for i in range(len(parameters[1]))
+    ] for i in range(len(parameters[0]))
+]
 
 def findOptimalFeeParallel(volatility, drift, strike_proportion):
     return optimize_fee.findOptimalFee(INITIAL_TAU, TIME_STEPS_SIZE, TIME_HORIZON, volatility, drift, STRIKE, STRIKE*strike_proportion)
@@ -42,9 +47,11 @@ start_nested = time.time()
 
 # With parallelization of the main loop
 
-optimal_fee_array = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(findOptimalFeeParallel)(volatility, drift, strike_proportion) for strike_proportion in parameters[2] for drift in parameters[1] for volatility in parameters[0])
+# Needs to be debugged: takes longer than non nested parallelization for some reason
 
-end_nested = time.time()
+# optimal_fee_array = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(findOptimalFeeParallel)(volatility, drift, strike_proportion) for strike_proportion in parameters[2] for drift in parameters[1] for volatility in parameters[0])
+
+# end_nested = time.time()
 
 start = time.time()
 
@@ -63,7 +70,7 @@ for i in range(len(parameters[0])):
 end = time.time()
 
 print("Without nested Joblib: ", end - start)
-print("With nested Joblib: ", end_nested - start_nested)
+# print("With nested Joblib: ", end_nested - start_nested)
 
 # data = {}
 # data['parameters'] = np.array(parameters)
