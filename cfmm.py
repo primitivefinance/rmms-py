@@ -101,7 +101,10 @@ class CoveredCallAMM():
         # print(f"New reserves risky = {self.reserves_risky + gamma*amount_in}")
         amount_out = self.reserves_riskless - new_reserves_riskless
         # assert nonnegative(amount_out)
-        effective_price_in_riskless = amount_out/amount_in
+        if amount_in == 0:
+            effective_price_in_riskless = inf
+        else: 
+            effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
     def swapAmountInRiskless(self, amount_in):
@@ -119,7 +122,7 @@ class CoveredCallAMM():
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky)
         # print("---------------------invariant here: ", self.invariant)
-        if amount_out == 0:
+        if amount_in == 0:
             effective_price_in_riskless = inf
         else: 
             effective_price_in_riskless = amount_in/amount_out
