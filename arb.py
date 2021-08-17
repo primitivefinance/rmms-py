@@ -42,13 +42,29 @@ def arbitrageExactly(market_price, Pool):
     #Market price
     m = market_price
 
+    # If the risky reserves are almost empty
     if R1 < EPSILON: 
         return
+    # or if the riskless reserves are almost empty
+    elif R2 < EPSILON or (K+k-R2)/gamma < EPSILON: 
+        return
+
+    # or if the risky reserves are almost full
+    elif 1 - R1 < EPSILON:
+        return
+
+    # or if the riskless reserves are almost full
+    elif K - R2 < EPSILON:
+        return
+
+    #In any of the above cases, we do nothing, this ensures that the bracketing for the root finding will always test a positive amount in no matter what.
 
     #If the price of selling epsilon of the risky asset is above the market price, we buy the optimal amount of the risky asset on the market and immediately sell it on the CFMM = **swap amount in risky**.
     elif price_sell_risky > m + 1e-8:
         #Solve for the optimal amount in
         def func(amount_in):
+            # print("1 - R1 - EPSILON = ", 1 - R1 - EPSILON)
+            # print(amount_in)
             return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
@@ -71,6 +87,8 @@ def arbitrageExactly(market_price, Pool):
     #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
     elif price_buy_risky < m - 1e-8:
         def func(amount_in):
+            # print("(K+k-R2)/gamma - EPSILON = ", (K+k-R2)/gamma - EPSILON)
+            # print(amount_in)
             return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
