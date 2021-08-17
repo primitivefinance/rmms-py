@@ -44,6 +44,6 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         gc.collect()
         return max(average_error, average_terminal_error)
 
-    sol = minimize_scalar(maxErrorFromFee, bounds=(0, 0.15), method='Brent')
+    sol = minimize_scalar(maxErrorFromFee, bounds=(0.0001, 0.15), method='Brent')
     optimal_fee = sol.x
     return optimal_fee
