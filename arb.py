@@ -6,9 +6,6 @@ import scipy
 import numpy as np
 from scipy.stats import norm
 from scipy import optimize
-from mpmath import findroot
-from illinois_algorithm import illinois
-from math import inf
 
 EPSILON = 1e-8
 
@@ -31,13 +28,6 @@ def arbitrageExactly(market_price, Pool):
     sigma = Pool.sigma
     tau = Pool.tau
 
-    # print("gamma = ", gamma)
-    # print("R1 = ", R1)
-    # print("R2 = ", R2)
-    # print("K = ", K)
-    # print("k = ", k)
-    # print("sigma = ", sigma)
-    # print("tau = ", tau)
 
     #Marginal price of selling epsilon risky
     # price_sell_risky = gamma*K*norm.pdf(norm.ppf(1 - R1) - sigma*np.sqrt(tau))*quantilePrime(1 - R1)
@@ -52,19 +42,18 @@ def arbitrageExactly(market_price, Pool):
     #Market price
     m = market_price
 
-    #If the price of selling epsilon of the risky asset is above the market price, we buy the optimal amount of the risky asset on the market and immediately sell it on the CFMM = **swap amount in risky**.
-
     if R1 < EPSILON: 
         return
 
-    elif price_sell_risky > m + EPSILON:
+    #If the price of selling epsilon of the risky asset is above the market price, we buy the optimal amount of the risky asset on the market and immediately sell it on the CFMM = **swap amount in risky**.
+    elif price_sell_risky > m + 1e-8:
         #Solve for the optimal amount in
         def func(amount_in):
             return Pool.getMarginalPriceSwapRiskyIn(amount_in) - m
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
         if (np.sign(func(EPSILON)) != np.sign(func(1 - R1 - EPSILON))):
-            optimal_trade = illinois(func, 1 - R1 - EPSILON, EPSILON, 0)
+            optimal_trade = scipy.optimize.brentq(func, EPSILON, 1 - R1 - EPSILON)
         else:
             optimal_trade = 1 - R1
         # print("result = ", func(optimal_trade))
@@ -80,14 +69,13 @@ def arbitrageExactly(market_price, Pool):
         # print("profit = ", profit)
     
     #If the price of buying epsilon of the risky asset is below the market price, we buy the optimal amount of the risky asset in the CFMM and immediately sell it on the market = **swap amount in riskless** in the CFMM.
-    elif price_buy_risky < m - EPSILON:
+    elif price_buy_risky < m - 1e-8:
         def func(amount_in):
             return m - Pool.getMarginalPriceSwapRisklessIn(amount_in)
         # If the sign is the same for the bounds of the possible trades, this means that the arbitrager can empty the pool while maximizing his profit (the profit may still be negative, even though maximum)
         # print("RESERVES PRINT DEBUG ", Pool.reserves_risky, Pool.reserves_riskless)
         if (np.sign(func(EPSILON)) != np.sign(func((K+k-R2)/gamma - EPSILON))):
-            #Because of the negative invariant, the max amount to put in is NOT K - R2. 
-            optimal_trade = illinois(func, (K+k-R2)/gamma - EPSILON, EPSILON, 0)
+            optimal_trade = scipy.optimize.brentq(func, EPSILON, (K+k-R2)/gamma - EPSILON)
         else: 
             optimal_trade = K- R2
             
