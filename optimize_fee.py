@@ -5,6 +5,7 @@ Contains a set of functions used to find the optimal fee for a given set of para
 import cfmm
 import gc
 import numpy as np
+import scipy
 from scipy.optimize import minimize_scalar
 from simulate import simulate
 from time_series import generateGBM
@@ -37,13 +38,23 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         Return the max of the average mse and average terminal square error from 100 
         simulations with different price actions given these parameters
         '''
-        results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(20))
+        # DEBUGGING 
+        # print("fee = ", fee)
+        # results = []
+        # for i in range(50): 
+        #     print("STEP ", i)
+        #     results.append(returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price))
+
+        results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(100))
         average_error = np.mean([item[0] for item in results])
         average_terminal_error = np.mean([item[1] for item in results])
         del results
         gc.collect()
-        return max(average_error, average_terminal_error)
+        # return max(average_error, average_terminal_error)
+        return average_terminal_error
 
-    sol = minimize_scalar(maxErrorFromFee, bounds=(0.0001, 0.15), method='Brent')
-    optimal_fee = sol.x
+    #Look for the optimal fee with a tolerance of +/- 0.5% or 50 bps
+    # sol = minimize_scalar(maxErrorFromFee, bracket=(0.0001, 0.15), method='Golden', tol = 0.005)
+    sol = scipy.optimize.fminbound(maxErrorFromFee, 0.0001, 0.10, xtol = 0.0005)
+    optimal_fee = sol
     return optimal_fee

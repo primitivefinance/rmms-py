@@ -22,6 +22,9 @@ def simulate(Pool, t, gbm):
     for i in range(len(gbm)): 
         theoretical_tau = initial_tau - t[i]
         Pool.tau = initial_tau - t[i]
+        #Hack to avoid slightly negative values of tau
+        if Pool.tau < 0:
+            Pool.tau = 0
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
         arbitrageExactly(gbm[i], Pool)
         theoretical_reserves_risky = getRiskyGivenSpotPriceWithDelta(gbm[i], Pool.K, Pool.sigma, theoretical_tau)
