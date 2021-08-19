@@ -13,7 +13,7 @@ import numpy as np
 
 from utils import nonnegative, quantilePrime, blackScholesCoveredCallSpotPrice
 
-EPSILON = 1e-15
+EPSILON = 1e-8
 
 class CoveredCallAMM():
     '''
@@ -189,7 +189,7 @@ class CoveredCallAMM():
         K = self.K  
         sigma = self.sigma
         tau = self.tau
-        if ((gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) == 0):
+        if ((gamma * norm.pdf(norm.ppf(float((R + gamma*amount_in - k)/K)) + sigma*np.sqrt(tau))*quantilePrime((R + gamma*amount_in - k)/K)*(1/K)) < EPSILON):
             #Infinity
             return 1e8
         else: 
