@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-import optimize_fee
+from modules import optimize_fee
 
 # Script used to map a tuple of (volatility, drift, strike price) to the optial
 # fee to choose for the pool, i.e. the fee that minimizes the max of the mean 
@@ -38,9 +38,9 @@ min_drift = 1
 max_drift = 1
 min_distance = 0.7
 max_distance = 0.9
-N_vol = 10
+N_vol = 1
 N_drift = 1
-N_distance = 10
+N_distance = 1
 
 parameters = [np.linspace(min_vol, max_vol, N_vol), np.linspace(min_drift, max_drift, N_drift), np.linspace(min_distance, max_distance, N_distance)]
 # optimal_fee_array = [[0 for i in range(len(parameters[0]))], [0 for i in range(len(parameters[1]))], [0 for i in range(len(parameters[2]))]]
@@ -92,8 +92,8 @@ data['optimal_fees'] = optimal_fee_array
 now = datetime.now()
 dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
 filename = 'optimization_results_'+ dt_string + '.dat'
-Path('optimization').mkdir(parents=True, exist_ok=True)
-with open('optimization/'+filename, 'w+') as f:
+Path('optimization_results').mkdir(parents=True, exist_ok=True)
+with open('optimization_results/'+filename, 'w+') as f:
     json.dump(data, f)
 
 

@@ -1,9 +1,5 @@
 from time import time
 from joblib.parallel import Parallel, delayed
-from scipy.optimize.zeros import results_c
-from time_series import generateGBM
-from simulate import simulate
-from optimize_fee import findOptimalFee
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 import os
@@ -12,11 +8,15 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import cfmm
-from utils import blackScholesCoveredCallSpotPrice
-from cfmm import CoveredCallAMM
+
+from modules.utils import generateGBM
+from modules.simulate import simulate
+from modules.optimize_fee import findOptimalFee
+from modules import cfmm
+from modules.utils import blackScholesCoveredCallSpotPrice
+from modules.cfmm import CoveredCallAMM
 import matplotlib.pyplot as plt
-import arb
+from modules import arb
 
 def main():
     # def getRisklessGivenRisky(risky, K, sigma, tau): 
@@ -252,7 +252,7 @@ def main():
         # and some arbitrary drift. Try to change the drift, the unit of volatility etc in such a way that it 
         # produces something that makes sense.
 
-        import time_series
+        from modules import utils
 
         # Example 1: converted annualized vol to timestep vol, high drift  
         # NOTE: the price is shooting up, completely unrealistic
@@ -267,7 +267,7 @@ def main():
         N_timesteps = 365/time_steps_size
         # Scaled down volatility from annualized volatility
         sigma_timesteps = annualized_vol/np.sqrt(N_timesteps)
-        t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+        t, S = utils.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
         plt.plot(t, S)
         plt.title("Example 1")
         plt.show()
@@ -275,7 +275,7 @@ def main():
         # # Example 2: converted annualized vol to vol, low drift
         # # NOTE: the price might as well stay constant, completely unrealistic
         drift = 0.0004
-        t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+        t, S = utils.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
         plt.plot(t, S)
         plt.title("Example 2")
         plt.show()
@@ -283,7 +283,7 @@ def main():
         # # Example 3: converted annualized vol to timestep vol, drift somewhere in the middle
         # #NOTE: completely unrealistic, just going up regularly
         drift = 0.004
-        t, S = time_series.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
+        t, S = utils.generateGBM(time_horizon, drift, sigma_timesteps, initial_price, time_steps_size)
         plt.plot(t, S)
         plt.title("Example 3")
         plt.show()
@@ -292,7 +292,7 @@ def main():
         time_horizon = 1
         drift = 1
         time_steps_size = 0.0027397260274
-        t, S = time_series.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
+        t, S = utils.generateGBM(time_horizon, drift, annualized_vol, initial_price, time_steps_size)
         plt.plot(t, S)
         plt.title("Example 4")
         plt.show()
@@ -309,9 +309,9 @@ def main():
         initial_tau = 1
         # Pool = CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
         # t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
-        # from simulate import simulate
+        # from modules.simulate import simulate
         # mse, terminal_square_error = simulate(Pool, t, gbm)
-        from optimize_fee import returnErrors, findOptimalFee
+        from modules.optimize_fee import returnErrors, findOptimalFee
         mse, terminal_deviation = returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
 
     #Test max error from fee runtime
@@ -326,7 +326,7 @@ def main():
         initial_tau = 1
         # fee = findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
         # print(fee)
-        from optimize_fee import returnErrors
+        from modules.optimize_fee import returnErrors
         def maxErrorFromFee(fee): 
             '''
             Return the max of the average mse and average terminal square error from 100 
@@ -346,7 +346,7 @@ def main():
     # Test parallel processing
     if False:
         import time 
-        from optimize_fee import returnErrors
+        from modules.optimize_fee import returnErrors
         from joblib import Parallel, delayed, parallel_backend
 
         fee = 0.01
@@ -483,8 +483,9 @@ def main():
         from joblib import Parallel, delayed
         import time 
 
-        import time_series
-        import cfmm
+        from modules.utils import generateGBM
+        from modules import cfmm
+        from modules.simulate import simulate
 
         fee = 0.01
         strike = 2000
@@ -498,7 +499,7 @@ def main():
         count = [0]
 
         def simulation():
-            t, gbm = time_series.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+            t, gbm = generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
             Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
             simulate(Pool, t, gbm)
             count[0]+=1
@@ -546,9 +547,9 @@ def main():
     #Simulation runtime test    
     if True: 
         import time
-        import time_series
-        import cfmm
-        from simulate import simulate
+        from modules import utils
+        from modules import cfmm
+        from modules.simulate import simulate
         fee = 0.01
         strike = 2000
         initial_price = 0.8*2000
@@ -560,7 +561,7 @@ def main():
         total_time = 0
         Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
         for i in range(100):
-            t, gbm = time_series.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+            t, gbm = utils.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
             start = time.time()
             _, _, _, _ = simulate(Pool, t, gbm)
             end = time.time()
@@ -568,16 +569,16 @@ def main():
         print("Average runtime: ", total_time/100)
 
     if False: 
-        import utils
+        from modules import utils
         print(utils.getRiskyGivenSpotPriceWithDelta(2000, 3000, 0.5, 1))
         print(utils.getRiskyReservesGivenSpotPrice(2000, 3000, 0.5, 1))
 
     if False: 
         import numpy as np
         import time
-        import time_series
-        import cfmm
-        from simulate import simulate
+        from modules.utils import generateGBM
+        from modules import cfmm
+        from modules.simulate import simulate
         fee = 0.05
         strike = 2000
         initial_price = 0.8*2000
@@ -589,7 +590,7 @@ def main():
         total_time = 0
         np.random.seed(15425)
         Pool = cfmm.CoveredCallAMM(0.5, strike, volatility, initial_tau, fee)
-        t, gbm = time_series.generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
+        t, gbm =generateGBM(time_horizon, drift, volatility, initial_price, time_steps_size)
         start = time.time()
         _, _, _, d = simulate(Pool, t, gbm)
         end = time.time()

@@ -5,18 +5,12 @@ and display and/or record the results.
 
 from configparser import ConfigParser
 
-import cfmm
-import time_series
-from utils import getRiskyGivenSpotPriceWithDelta
-from utils import getRisklessGivenRisky
-from arb import arbitrageExactly
-
 import matplotlib.pyplot as plt 
 import numpy as np
-import scipy
-from scipy.stats import norm
 
-import math
+from modules import cfmm
+from modules.arb import arbitrageExactly
+from modules.utils import getRiskyGivenSpotPriceWithDelta, getRisklessGivenRisky, generateGBM
 
 EPSILON = 1e-8
 
@@ -68,7 +62,7 @@ dt = TIME_STEPS_SIZE
 S0 = INITIAL_REFERENCE_PRICE
 
 
-t, S = time_series.generateGBM(T, DRIFT, ANNUALIZED_VOL, S0, dt)
+t, S = generateGBM(T, DRIFT, ANNUALIZED_VOL, S0, dt)
 
 if IS_CONSTANT_PRICE:
     length = len(S)
@@ -96,27 +90,17 @@ effective_lp_value_array = []
 dtau = TAU_UPDATE_FREQUENCY
 
 for i in range(len(S)):
-    # if i % 36 == 0: 
-    #     print("In progress... ", round(i/365), "%")
+
     #Update pool's time to maturity
     theoretical_tau = initial_tau - t[i]
-
-    # print(f"___________________ \n \nStep {i}")
-    # print("Invariant before updating tau =  ", Pool.invariant)
     
     if i % dtau == 0:
-        # print("hey")
         Pool.tau = initial_tau - t[i]
-        # print("New tau = ", Pool.tau)
         #Changing tau changes the value of the invariant even if no trade happens
         Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
-        # print("Invariant after updating tau =  ", Pool.invariant)
         spot_price_array.append(Pool.getSpotPrice())
         # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
         # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
-    
-    # This is to avoid numerical errors that have been observed when getting 
-    # closer to maturity. TODO: Figure out what causes these numerical errors.
 
     if Pool.tau >= 0:
         #Perform arbitrage step
@@ -129,8 +113,6 @@ for i in range(len(S)):
         theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
         theoretical_lp_value_array.append(theoretical_lp_value)
         effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
-        # max_marginal_price_array.append(max_marginal_price)
-        # min_marginal_price_array.append(min_marginal_price)
     if Pool.tau < 0: 
         max_index = i
         break

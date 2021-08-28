@@ -2,14 +2,16 @@
 Contains a set of functions used to find the optimal fee for a given set of parameters.
 '''
 
-import cfmm
 import gc
 import numpy as np
 import scipy
 from scipy.optimize import minimize_scalar
-from simulate import simulate
-from time_series import generateGBM
+
 from joblib import Parallel, delayed
+
+from modules.utils import generateGBM
+from modules.simulate import simulate
+from modules import cfmm
 
 def returnErrors(fee, initial_tau, timestep_size, time_horizon, volatility, drift, strike, initial_price):
     '''
@@ -45,7 +47,7 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         #     print("STEP ", i)
         #     results.append(returnErrors(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price))
 
-        results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(100))
+        results = Parallel(n_jobs=-1, verbose=0, backend='loky')(delayed(returnErrors)(fee, initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price) for i in range(50))
         average_error = np.mean([item[0] for item in results])
         average_terminal_error = np.mean([item[1] for item in results])
         del results

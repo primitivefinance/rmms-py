@@ -11,7 +11,7 @@ from scipy import optimize
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import nonnegative, quantilePrime, blackScholesCoveredCallSpotPrice
+from modules.utils import nonnegative, quantilePrime, blackScholesCoveredCallSpotPrice
 
 EPSILON = 1e-8
 
@@ -44,10 +44,6 @@ class CoveredCallAMM():
         self.tau = tau
         self.initial_tau = tau
         self.invariant = 0
-        # function = lambda y : blackScholesCoveredCall([initial_x, y], self.K, self.sigma, self.tau)
-        # #Find solution that satisfies the invariant equation Phi(x,y) = 0
-        # y = scipy.optimize.root(function, initial_x, method='lm')
-        # self.reserves_riskless = y.x[0]
         self.reserves_riskless = self.K*norm.cdf(norm.ppf(1-initial_x) - self.sigma*np.sqrt(self.tau))
         self.fee = fee
         self.accured_fees = [0,0]
@@ -79,7 +75,6 @@ class CoveredCallAMM():
         assert nonnegative(new_reserves_riskless)
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky) 
-        # print('post invariant: ', self.invariant)
         effective_price_in_riskless = amount_out/amount_in
         return amount_out, effective_price_in_riskless
 
@@ -91,16 +86,11 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        # print(f"Old reserves riskless = {self.reserves_riskless}")
-        # print(f"Old reserves risky = {self.reserves_risky}")
         new_reserves_riskless = self.getRisklessGivenRisky(self.reserves_risky + gamma*amount_in)
-        # print(f"New reserves riskless = {new_reserves_riskless}")
         if new_reserves_riskless <= 0 or math.isnan(new_reserves_riskless):
             return 0, 0
         assert nonnegative(new_reserves_riskless)
-        # print(f"New reserves risky = {self.reserves_risky + gamma*amount_in}")
         amount_out = self.reserves_riskless - new_reserves_riskless
-        # assert nonnegative(amount_out)
         if amount_in == 0:
             effective_price_in_riskless = inf
         else: 
@@ -121,7 +111,6 @@ class CoveredCallAMM():
         self.reserves_risky -= amount_out
         #Update invariant
         self.invariant = self.reserves_riskless - self.getRisklessGivenRiskyNoInvariant(self.reserves_risky)
-        # print("---------------------invariant here: ", self.invariant)
         if amount_in == 0:
             effective_price_in_riskless = inf
         else: 
@@ -136,16 +125,11 @@ class CoveredCallAMM():
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
-        # print(f"Old reserves riskless = {self.reserves_riskless}")
-        # print(f"Old reserves risky = {self.reserves_risky}")
         new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
-        # print(f"New reserves risky = {new_reserves_risky}")
         if new_reserves_risky <= 0 or math.isnan(new_reserves_risky):
             return 0, 0
         assert nonnegative(new_reserves_risky)
-        # print(f"New reserves riskless = {self.reserves_riskless + gamma*amount_in}")
         amount_out = self.reserves_risky - new_reserves_risky
-        # assert nonnegative(amount_out)
         if amount_out == 0:
             effective_price_in_riskless = inf
         else: 
