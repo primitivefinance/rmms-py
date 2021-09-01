@@ -327,7 +327,7 @@ def main():
         # fee = findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
         # print(fee)
         from modules.optimize_fee import returnErrors
-        def maxErrorFromFee(fee): 
+        def ErrorFromFee(fee): 
             '''
             Return the max of the average mse and average terminal square error from 100 
             simulations with different price actions given these parameters
@@ -341,7 +341,7 @@ def main():
             average_mse = np.mean(mse_array)
             average_square_terminal_error = np.mean(square_terminal_error_array)
             return max(average_mse, average_square_terminal_error)
-        m = maxErrorFromFee(0.01)
+        m = ErrorFromFee(0.01)
 
     # Test parallel processing
     if False:
@@ -360,7 +360,7 @@ def main():
         # fee = findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift, strike, initial_price)
         # print(fee)
 
-        def maxErrorFromFeeJoblib(fee): 
+        def ErrorFromFeeJoblib(fee): 
             '''
             Return the max of the average mse and average terminal square error from 100 
             simulations with different price actions given these parameters
@@ -372,7 +372,7 @@ def main():
             average_square_terminal_error = np.mean([item[1] for item in results])
             return max(average_mse, average_square_terminal_error)
 
-        def maxErrorFromFee(fee): 
+        def ErrorFromFee(fee): 
             '''
             Return the max of the average mse and average terminal square error from 100 
             simulations with different price actions given these parameters
@@ -389,11 +389,11 @@ def main():
 
         # fees = fee*np.ones(2)
         start = time.time()
-        m = maxErrorFromFee(0.01)
+        m = ErrorFromFee(0.01)
         end = time.time()
         print("Without joblib = ", end - start)
         start = time.time()
-        m = maxErrorFromFeeJoblib(0.01)
+        m = ErrorFromFeeJoblib(0.01)
         end = time.time()
         print("With joblib = ", end - start)
 
@@ -408,15 +408,15 @@ def main():
         #     return mse, terminal_square_error   
 
         # start = time.time()
-        # m = maxErrorFromFee(0.01)
+        # m = ErrorFromFee(0.01)
         # end = time.time()
         # print("Runtime without numba: ", end - start)
         # start = time.time()
-        # m = maxErrorFromFee(0.01)
+        # m = ErrorFromFee(0.01)
         # end = time.time()
         # print("Runtime with numba (compilation included): ", end - start)
         # start = time.time()
-        # m = maxErrorFromFee(0.01)
+        # m = ErrorFromFee(0.01)
         # end = time.time()
         # print("Runtime with numba (from cache): ", end - start)
     

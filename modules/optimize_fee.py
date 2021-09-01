@@ -35,7 +35,7 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
     simulation)
     '''
 
-    def maxErrorFromFee(fee): 
+    def ErrorFromFee(fee): 
         '''
         Return the max of the average mse and average terminal square error from 100 
         simulations with different price actions given these parameters
@@ -56,7 +56,7 @@ def findOptimalFee(initial_tau, time_steps_size, time_horizon, volatility, drift
         return average_terminal_error
 
     #Look for the optimal fee with a tolerance of +/- 0.5% or 50 bps
-    # sol = minimize_scalar(maxErrorFromFee, bracket=(0.0001, 0.15), method='Golden', tol = 0.005)
-    sol = scipy.optimize.fminbound(maxErrorFromFee, 0.0001, 0.10, xtol = 0.0005)
+    # sol = minimize_scalar(ErrorFromFee, bracket=(0.0001, 0.15), method='Golden', tol = 0.005)
+    sol = scipy.optimize.fminbound(ErrorFromFee, 0.0001, 0.10, xtol = 0.0005)
     optimal_fee = sol
     return optimal_fee
