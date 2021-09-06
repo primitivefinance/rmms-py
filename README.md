@@ -19,3 +19,7 @@ This project is intended to investigate the replication of payoffs using custom 
 ``error_distribution.py`` is a script to plot the distribution of errors given some market and pool parameters for different fee regimes.
 
 All the different functions and design choices are documented in a separate document.
+
+## Requirements
+
+``pip install numpy, pip install scipy, pip install matplotlib, pip install joblib``
