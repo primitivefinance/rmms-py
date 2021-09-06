@@ -26,10 +26,14 @@ class CoveredCallAMM():
         the reserves of the AMM pool in the risky asset 
     reserves_riskless: float
         the reserves of the AMM pool in the riskless asset
-    accrued_fees: list[float]
-        fees accrued by the pool over time, separate from the reserves to make
-        sure we only execute feasible trades, ordered in risky and then
-        riskless asset
+    tau: float
+        the time to maturity for this pool in the desired units
+    K: float
+        the strike price for this pool
+    sigma: float
+        the volatility for this pool, scaled to be consistent with the unit of tau (annualized if tau is in years etc)
+    invariant: float
+        the invariant of the CFMM
     '''
 
     def __init__(self, initial_x, K, sigma, tau, fee):
@@ -80,9 +84,12 @@ class CoveredCallAMM():
 
     def virtualSwapAmountInRisky(self, amount_in): 
         '''
-        Perform a swap and then revert the state of the pool. Useful to
-        estimate the effective price that one would get in a non analytical way
-        (what actually happens at the end of the day in the pool)
+        Perform a swap and then revert the state of the pool. 
+
+        Returns: 
+        
+        amount_out: the amount that the trader would get out given the amount in 
+        effective_price_in_riskless: the effective price the trader would pay for that trade denominated in the riskless asset
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -99,8 +106,12 @@ class CoveredCallAMM():
 
     def swapAmountInRiskless(self, amount_in):
         '''
-        Swap in some amount of the riskless asset and get some amount of the
-        risky asset in return.
+        Swap in some amount of the riskless asset and get some amount of the risky asset in return.
+
+        Returns:
+
+        amount_out: the amount to be given to the trader
+        effective_price_in_riskless: the effective price the trader actually paid for that trade denominated in the riskless asset
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -119,9 +130,12 @@ class CoveredCallAMM():
 
     def virtualSwapAmountInRiskless(self, amount_in): 
         '''
-        Perform a swap and then revert the state of the pool. Useful to
-        estimate the effective price that one would get in a non analytical way
-        (what actually happens at the end of the day in the pool)
+        Perform a swap and then revert the state of the pool. 
+
+        Returns: 
+
+        amount_out: the amount that the trader would get out given the amount in 
+        effective_price_in_riskless: the effective price the trader would pay for that trade denominated in the riskless asset
         '''
         assert nonnegative(amount_in)
         gamma = 1 - self.fee
@@ -162,7 +176,7 @@ class CoveredCallAMM():
 
     def getMarginalPriceSwapRisklessIn(self, amount_in):
         '''
-        Returns the marginal price of a trade of size amount_in (in the
+        Returns the marginal price after a trade of size amount_in (in the
         riskless asset) with the current reserves (in RISKLESS.RISKY-1)
         See https://arxiv.org/pdf/2012.08040.pdf  
         '''
@@ -181,9 +195,8 @@ class CoveredCallAMM():
 
     def getRiskyReservesGivenSpotPrice(self, S):
         '''
-        Given some spot price S, get the risky reserves corresponding to that
-        spot price by solving the S = -y' = -f'(x) for x. Only useful in the
-        no-fee case.
+        Given some spot price S in the no-fee case, get the risky reserves corresponding to that
+        spot price by solving the S = -y' = -f'(x) for x. 
         '''
         def func(x):
             return S - blackScholesCoveredCallSpotPrice(x, self.K, self.sigma, self.tau)
