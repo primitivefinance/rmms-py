@@ -118,6 +118,7 @@ class CoveredCallAMM():
         new_reserves_risky = self.getRiskyGivenRiskless(self.reserves_riskless + gamma*amount_in)
         assert nonnegative(new_reserves_risky)
         amount_out = self.reserves_risky - new_reserves_risky
+        assert nonnegative(amount_out)
         self.reserves_riskless += amount_in
         self.reserves_risky -= amount_out
         #Update invariant
