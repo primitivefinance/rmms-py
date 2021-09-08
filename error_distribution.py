@@ -26,10 +26,10 @@ dt = 0.000913242
 
 N_paths = 150
 
-fees = np.linspace(0.02, 0.09, 5)
+fees = np.linspace(0.005, 0.08, 5)
 
 plt.figure()
-plt.gca().set_prop_cycle(plt.cycler('color', plt.cm.hot(np.linspace(0, 0.6, 5))))
+plt.gca().set_prop_cycle(plt.cycler('color', plt.cm.hot(np.flip(np.linspace(0, 0.66, 6)))))
 
 for fee in fees:
 
@@ -50,9 +50,9 @@ for fee in fees:
     m = np.log(scale)
     s = shape
 
-    if fee == fees[-1]:
-        binwidth = abs((max(errors) - min(errors))/(N_paths/3))
-        plt.hist(errors, np.arange(min(errors), max(errors) + binwidth, binwidth), density=True)
+    # if fee == fees[-1]:
+    #     binwidth = abs((max(errors) - min(errors))/(N_paths/3))
+    #     plt.hist(errors, np.arange(min(errors), max(errors) + binwidth, binwidth), density=True)
 
     def pdf_fit(x):
         return stats.lognorm.pdf(x, shape, loc, scale)
