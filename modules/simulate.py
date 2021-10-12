@@ -14,6 +14,7 @@ def simulate(Pool, t, gbm):
     motion, for that time array, returns the results of a simulation of that pool 
     under optimal arbitrage.
     '''
+    np.random.seed()
     # Array to store the theoretical value of LP shares in the case of a pool with zero fees
     theoretical_lp_value_array = []
     # Effective value of LP shares with fees
