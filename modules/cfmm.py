@@ -199,8 +199,8 @@ class CoveredCallAMM():
         Given some spot price S in the no-fee case, get the risky reserves corresponding to that
         spot price by solving the S = -y' = -f'(x) for x. 
         '''
-        def func(x):
-            return S - blackScholesCoveredCallSpotPrice(x, self.K, self.sigma, self.tau)
-        sol = scipy.optimize.root(func, self.reserves_risky)
+        def func():
+            return S - blackScholesCoveredCallSpotPrice(self.reserves_risky, self.K, self.sigma, self.tau)
+        sol = scipy.optimize.root(func)
         reserves_risky = sol.x[0]
         return reserves_risky
