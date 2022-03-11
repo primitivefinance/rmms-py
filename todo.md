@@ -17,3 +17,7 @@ Test cases
 2. Using result from root call getRiskyGivenSpotPriceWithDelta to determine new pool initial_x
 3. Move liquidity from old pool to new pool
 4. Continue arbitrage routine until divergence_max is reached, repeat
+
+## TODO 3/11
+1. Solve for arb loss, to do this we check the value of the position prior to shifting versus after shifting
+2. Model slippage/fees doing a normal swap to rebalance

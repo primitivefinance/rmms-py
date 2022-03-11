@@ -109,20 +109,25 @@ theoretical_lp_value_array = []
 # Effective value of LP shares with fees
 effective_lp_value_array = []
 
+# pool status
+pool_status_array = []
+
 dtau = TAU_UPDATE_FREQUENCY
+
+next_price_array = []
+current_spot_price_array = []
 
 # 1. Check spot price
 # 2. Set strike price that is within x% of spot price (25%)
 # 3. Initialize CFMM 
 # 4. Run arbitraguer, check divergence from strike price at each timestep, if 1 + x% > 1 - spot_price/strike_price > 1 - x%
 # 5. Move to new CFMM with strike x% +/- i with expiry + 1 month
-max_index = 0
-def runStrategyWithArbitrage(pool, current_index):
+def runStrategyWithArbitrage(pool, current_index, max_index):
     for i in range(len(S) - current_index):
         #Update pool's time to maturity
         theoretical_tau = initial_tau - t[i + current_index]
         next_start_index = i + current_index
-        print(vars(pool))
+        #print(vars(pool))
         
         if i % dtau == 0:
             pool.tau = initial_tau - t[i + current_index]
@@ -143,30 +148,37 @@ def runStrategyWithArbitrage(pool, current_index):
             theoretical_lp_value = theoretical_reserves_risky*S[i + current_index] + theoretical_reserves_riskless
             theoretical_lp_value_array.append(theoretical_lp_value)
             effective_lp_value_array.append(pool.reserves_risky*S[i + current_index] + pool.reserves_riskless)
+            pool_status_array.append(pool.K)
             if i + current_index >= len(S) - 1:
                 print("breaking") 
-                max_index = i
+                return i + current_index
                 break
             if 1 + MAX_DIVERGENCE < (S[i + current_index] / K) or 1 - MAX_DIVERGENCE < 1 - (S[i + current_index] / K):
                 new_K = 0
                 if S[i + current_index] > K:
-                    new_K = S[i + current_index] + .20*(S[i + current_index])
+                    new_K = S[i + current_index] + .01*(S[i + current_index])
                 else:
-                    new_K = S[i + current_index] - .20*(S[i + current_index])
-                next_pool_initial_price = findRootNextPool(pool.getSpotPrice(), pool.K, pool.sigma, pool.tau, pool.invariant, new_K, pool.sigma, pool.tau, pool.getSpotPrice())
+                    new_K = S[i + current_index] - .01*(S[i + current_index])
+                next_pool_initial_price = findRootNextPool(pool.getSpotPrice(), pool.K, pool.sigma, pool.tau, pool.invariant, new_K, pool.sigma, pool.tau + 0.0004566210, pool.getSpotPrice())
 #                print("implied_price", pool.getSpotPrice())
 #                print("next_price", next_pool_initial_price)
-                next_risky = getRiskyGivenSpotPriceWithDelta(next_pool_initial_price, new_K, pool.sigma, pool.tau)
-                next_pool = cfmm.CoveredCallAMM(next_risky, new_K, sigma, pool.tau, fee)
+                next_risky = getRiskyGivenSpotPriceWithDelta(next_pool_initial_price, new_K, pool.sigma, pool.tau + 0.0004566210)
+                next_pool = cfmm.CoveredCallAMM(next_risky, new_K, sigma, pool.tau + 0.0004566210, fee)
+                next_price_array.append(next_pool_initial_price)
+                current_spot_price_array.append(pool.getSpotPrice())
+                if next_start_index >= len(S) - 1:
+                    print("breaking in divergence check") 
+                    max_index = i + current_index
+                    break
 #                print("next pool", vars(next_pool))
-                runStrategyWithArbitrage(next_pool, next_start_index + 1)
+                runStrategyWithArbitrage(next_pool, next_start_index + 1, max_index)
                 break
         if pool.tau < 0: 
             max_index = i
             break
         max_index = i
 
-runStrategyWithArbitrage(Pool, 0)
+max_index = runStrategyWithArbitrage(Pool, 0, 0)
 
 # plt.plot(fees, mse, 'o')
 # plt.xlabel("Fee")
@@ -179,6 +191,7 @@ effective_lp_value_array = np.array(effective_lp_value_array)
 
 #Mean square error
 mse = np.square(np.subtract(theoretical_lp_value_array, effective_lp_value_array)/theoretical_lp_value_array).mean()
+print("mse", np.square(np.subtract(next_price_array, current_spot_price_array)/next_price_array).mean())
 
 if PLOT_PRICE_EVOL: 
     plt.plot(t[0:max_index], S[0:max_index], label = "Reference price")
