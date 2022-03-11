@@ -74,6 +74,7 @@ if IS_CONSTANT_PRICE:
 plt.plot(t, S)
 plt.show()
 
+
 # Prepare storage variables
 
 # Store spot prices after each step

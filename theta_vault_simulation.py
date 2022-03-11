@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from modules import cfmm
+from scipy import optimize
+from scipy.stats import norm
 from modules.arb import arbitrageExactly
 from modules.utils import getRiskyGivenSpotPriceWithDelta, getRisklessGivenRisky, generateGBM
 
@@ -75,6 +77,25 @@ if IS_CONSTANT_PRICE:
 plt.plot(t, S)
 plt.show()
 
+# next_initial_S = next initial spot price
+# K1 = original strike price 
+# v1 = original sigma 
+# t1 = original maturity 
+# inv1 = original invariant 
+# K2 = next strike price 
+# v2 = next sigma 
+# t2 = next maaturity 
+# p0 = original implied price
+def findNextPool(initial_S, K1, v1, t1, inv1, K2, v2, t2, p0):
+    H1 = (K2*norm.cdf(np.log(initial_S/K2)/(v2*np.sqrt(t2))-0.5*v2*np.sqrt(t2)))/norm.cdf(-np.log(initial_S/K2)/(v2*np.sqrt(t2))-0.5*v2*np.sqrt(t2))
+    H2 = (K1*norm.cdf(np.log(p0/K1)/(v1*np.sqrt(t1))-0.5*v1*np.sqrt(t1))+inv1)/norm.cdf(-np.log(p0/K1)/(v1*np.sqrt(t1))-0.5*v1*np.sqrt(t1))
+    return H1 - H2
+
+def findRootNextPool(initial_S, K1, v1, t1, inv1, K2, v2, t2, p0):
+    root = optimize.root(findNextPool, initial_S, (K1, v1, t1, inv1, K2, v2, t2, p0))
+    return root.x[0]
+
+
 # Prepare storage variables
 
 # Store spot prices after each step
@@ -95,70 +116,57 @@ dtau = TAU_UPDATE_FREQUENCY
 # 3. Initialize CFMM 
 # 4. Run arbitraguer, check divergence from strike price at each timestep, if 1 + x% > 1 - spot_price/strike_price > 1 - x%
 # 5. Move to new CFMM with strike x% +/- i with expiry + 1 month
-def runStrategyWithArbitrage(pool):
-    #Update pool's time to maturity
-    theoretical_tau = initial_tau - t[i]
-    
-    if i % dtau == 0:
-        Pool.tau = initial_tau - t[i]
-        #Changing tau changes the value of the invariant even if no trade happens
-        Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
-        spot_price_array.append(Pool.getSpotPrice())
-        # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
-        # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
+max_index = 0
+def runStrategyWithArbitrage(pool, current_index):
+    for i in range(len(S) - current_index):
+        #Update pool's time to maturity
+        theoretical_tau = initial_tau - t[i + current_index]
+        next_start_index = i + current_index
+        print(vars(pool))
+        
+        if i % dtau == 0:
+            pool.tau = initial_tau - t[i + current_index]
+            #Changing tau changes the value of the invariant even if no trade happens
+            pool.invariant = pool.reserves_riskless - pool.getRisklessGivenRiskyNoInvariant(pool.reserves_risky)
+            spot_price_array.append(pool.getSpotPrice())
+            # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
+            # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
 
-    if Pool.tau >= 0:
-        #Perform arbitrage step
-        arbitrageExactly(S[i], Pool)
-        max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
-        min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
-        #Get reserves given the reference price in the zero fees case
-        theoretical_reserves_risky = getRiskyGivenSpotPriceWithDelta(S[i], Pool.K, Pool.sigma, theoretical_tau)
-        theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, Pool.K, Pool.sigma, theoretical_tau)
-        theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
-        theoretical_lp_value_array.append(theoretical_lp_value)
-        effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
-        if 1 + MAX_DIVERGENCE < (S[i] / K) or 1 - MAX_DIVERGENCE < 1 - (S[i] / K):
-            print(S[i] / K)
-            new_K = S[i] + .15(S[i])
-            Pool = cfmm.CoveredCallAMM(0.5, new_K, sigma, .3, fee)
+        if pool.tau >= 0:
+            #Perform arbitrage step
+            arbitrageExactly(S[i + current_index], pool)
+            max_marginal_price_array.append(pool.getMarginalPriceSwapRisklessIn(0))
+            min_marginal_price_array.append(pool.getMarginalPriceSwapRiskyIn(0))
+            #Get reserves given the reference price in the zero fees case
+            theoretical_reserves_risky = getRiskyGivenSpotPriceWithDelta(S[i + current_index], pool.K, pool.sigma, theoretical_tau)
+            theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, pool.K, pool.sigma, theoretical_tau)
+            theoretical_lp_value = theoretical_reserves_risky*S[i + current_index] + theoretical_reserves_riskless
+            theoretical_lp_value_array.append(theoretical_lp_value)
+            effective_lp_value_array.append(pool.reserves_risky*S[i + current_index] + pool.reserves_riskless)
+            if i + current_index >= len(S) - 1:
+                print("breaking") 
+                max_index = i
+                break
+            if 1 + MAX_DIVERGENCE < (S[i + current_index] / K) or 1 - MAX_DIVERGENCE < 1 - (S[i + current_index] / K):
+                new_K = 0
+                if S[i + current_index] > K:
+                    new_K = S[i + current_index] + .20*(S[i + current_index])
+                else:
+                    new_K = S[i + current_index] - .20*(S[i + current_index])
+                next_pool_initial_price = findRootNextPool(pool.getSpotPrice(), pool.K, pool.sigma, pool.tau, pool.invariant, new_K, pool.sigma, pool.tau, pool.getSpotPrice())
+#                print("implied_price", pool.getSpotPrice())
+#                print("next_price", next_pool_initial_price)
+                next_risky = getRiskyGivenSpotPriceWithDelta(next_pool_initial_price, new_K, pool.sigma, pool.tau)
+                next_pool = cfmm.CoveredCallAMM(next_risky, new_K, sigma, pool.tau, fee)
+#                print("next pool", vars(next_pool))
+                runStrategyWithArbitrage(next_pool, next_start_index + 1)
+                break
+        if pool.tau < 0: 
+            max_index = i
             break
-    if Pool.tau < 0: 
         max_index = i
-        break
-    max_index = i
 
-for i in range(len(S)):
-
-    #Update pool's time to maturity
-    theoretical_tau = initial_tau - t[i]
-    
-    if i % dtau == 0:
-        Pool.tau = initial_tau - t[i]
-        #Changing tau changes the value of the invariant even if no trade happens
-        Pool.invariant = Pool.reserves_riskless - Pool.getRisklessGivenRiskyNoInvariant(Pool.reserves_risky)
-        spot_price_array.append(Pool.getSpotPrice())
-        # _, max_marginal_price = Pool.virtualSwapAmountInRiskless(EPSILON)
-        # _, min_marginal_price = Pool.virtualSwapAmountInRisky(EPSILON)
-
-    if Pool.tau >= 0:
-        #Perform arbitrage step
-        arbitrageExactly(S[i], Pool)
-        max_marginal_price_array.append(Pool.getMarginalPriceSwapRisklessIn(0))
-        min_marginal_price_array.append(Pool.getMarginalPriceSwapRiskyIn(0))
-        #Get reserves given the reference price in the zero fees case
-        theoretical_reserves_risky = getRiskyGivenSpotPriceWithDelta(S[i], Pool.K, Pool.sigma, theoretical_tau)
-        theoretical_reserves_riskless = getRisklessGivenRisky(theoretical_reserves_risky, Pool.K, Pool.sigma, theoretical_tau)
-        theoretical_lp_value = theoretical_reserves_risky*S[i] + theoretical_reserves_riskless
-        theoretical_lp_value_array.append(theoretical_lp_value)
-        effective_lp_value_array.append(Pool.reserves_risky*S[i] + Pool.reserves_riskless)
-        if 1 + MAX_DIVERGENCE < (S[i] / K) or 1 - MAX_DIVERGENCE < 1 - (S[i] / K):
-            print(S[i] / K)
-            break
-    if Pool.tau < 0: 
-        max_index = i
-        break
-    max_index = i
+runStrategyWithArbitrage(Pool, 0)
 
 # plt.plot(fees, mse, 'o')
 # plt.xlabel("Fee")
