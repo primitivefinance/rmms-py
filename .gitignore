@@ -1,3 +1,10 @@
 __pycache__/
 sim_results
 optimization_results
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/other.xml
+.idea/rmms-py.iml
+.idea/vcs.xml

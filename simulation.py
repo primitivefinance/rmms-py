@@ -1,7 +1,7 @@
-'''
-Run an individual simulation from the config.ini parameters 
+"""
+Run an individual simulation from the config.ini parameters
 and display and/or record the results.
-'''
+"""
 
 from configparser import ConfigParser
 
